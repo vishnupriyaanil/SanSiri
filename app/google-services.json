@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "317681912640",
+    "project_id": "san-siri",
+    "storage_bucket": "san-siri.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:317681912640:android:c5b3c197684a34c54d08a5",
+        "android_client_info": {
+          "package_name": "com.anil.sansiri"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBulAXCg7amjEW_07-37E0R1G2FuWHkOV8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
