@@ -34,7 +34,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -150,16 +151,17 @@ fun RequestsTab(
         }
 
         // "+ New Request" button available to Users & Everyone
-        ExtendedFloatingActionButton(
+        FloatingActionButton(
             onClick = onNewRequestClicked,
-            icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },
-            text = { Text("New Request", fontWeight = FontWeight.Bold) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(20.dp),
             containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        )
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            shape = CircleShape
+        ) {
+            Icon(imageVector = Icons.Default.Add, contentDescription = "New Request")
+        }
     }
 }
 

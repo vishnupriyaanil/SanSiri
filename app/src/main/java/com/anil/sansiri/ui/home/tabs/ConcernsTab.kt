@@ -27,7 +27,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -132,16 +133,17 @@ fun ConcernsTab(
         }
 
         // "+ Raise Concern" button available to Users & Everyone
-        ExtendedFloatingActionButton(
+        FloatingActionButton(
             onClick = onRaiseConcernClicked,
-            icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },
-            text = { Text("Raise Concern", fontWeight = FontWeight.Bold) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(20.dp),
             containerColor = MaterialTheme.colorScheme.tertiary,
-            contentColor = MaterialTheme.colorScheme.onTertiary
-        )
+            contentColor = MaterialTheme.colorScheme.onTertiary,
+            shape = CircleShape
+        ) {
+            Icon(imageVector = Icons.Default.Add, contentDescription = "Raise Concern")
+        }
     }
 }
 

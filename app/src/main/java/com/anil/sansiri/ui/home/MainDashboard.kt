@@ -436,8 +436,8 @@ fun MainDashboard(
                             selected = uiState.selectedNavRoute == NavRouteItem.Announcements.route || uiState.selectedNavRoute == NavRouteItem.Home.route || uiState.selectedNavRoute == "HOME",
                             onClick = { viewModel.setSelectedNavRoute(NavRouteItem.Announcements.route) },
                             icon = { Icon(imageVector = NavRouteItem.Announcements.icon, contentDescription = NavRouteItem.Announcements.title) },
-                            label = { Text(text = NavRouteItem.Announcements.title) },
-                            alwaysShowLabel = true
+                            label = null,
+                            alwaysShowLabel = false
                         )
 
                         // 2nd Tab: Requests
@@ -445,8 +445,8 @@ fun MainDashboard(
                             selected = uiState.selectedNavRoute == NavRouteItem.Requests.route,
                             onClick = { viewModel.setSelectedNavRoute(NavRouteItem.Requests.route) },
                             icon = { Icon(imageVector = NavRouteItem.Requests.icon, contentDescription = NavRouteItem.Requests.title) },
-                            label = { Text(text = NavRouteItem.Requests.title) },
-                            alwaysShowLabel = true
+                            label = null,
+                            alwaysShowLabel = false
                         )
 
                         // 3rd Tab: Payments
@@ -464,8 +464,8 @@ fun MainDashboard(
                                     Icon(imageVector = NavRouteItem.Payments.icon, contentDescription = NavRouteItem.Payments.title)
                                 }
                             },
-                            label = { Text(text = NavRouteItem.Payments.title) },
-                            alwaysShowLabel = true
+                            label = null,
+                            alwaysShowLabel = false
                         )
 
                         // 4th Tab: Concerns
@@ -473,8 +473,8 @@ fun MainDashboard(
                             selected = uiState.selectedNavRoute == NavRouteItem.Concerns.route,
                             onClick = { viewModel.setSelectedNavRoute(NavRouteItem.Concerns.route) },
                             icon = { Icon(imageVector = NavRouteItem.Concerns.icon, contentDescription = NavRouteItem.Concerns.title) },
-                            label = { Text(text = NavRouteItem.Concerns.title) },
-                            alwaysShowLabel = true
+                            label = null,
+                            alwaysShowLabel = false
                         )
                     }
                 }

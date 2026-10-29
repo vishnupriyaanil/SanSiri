@@ -22,7 +22,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -122,16 +123,17 @@ fun AnnouncementsTab(
 
         // "+ Post Announcement" button ONLY visible to Admin & Super Admin
         if (isAdmin) {
-            ExtendedFloatingActionButton(
+            FloatingActionButton(
                 onClick = onPostAnnouncementClicked,
-                icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },
-                text = { Text("Post Announcement", fontWeight = FontWeight.Bold) },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(20.dp),
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = CircleShape
+            ) {
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Post Announcement")
+            }
         }
     }
 }

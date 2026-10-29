@@ -25,7 +25,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -108,16 +109,17 @@ fun ComplaintsTab(
         }
 
         // FAB to raise Complaint
-        ExtendedFloatingActionButton(
+        FloatingActionButton(
             onClick = onRaiseComplaintClicked,
-            icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },
-            text = { Text("Raise Complaint", fontWeight = FontWeight.Bold) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(20.dp),
             containerColor = MaterialTheme.colorScheme.error,
-            contentColor = MaterialTheme.colorScheme.onError
-        )
+            contentColor = MaterialTheme.colorScheme.onError,
+            shape = CircleShape
+        ) {
+            Icon(imageVector = Icons.Default.Add, contentDescription = "Raise Complaint")
+        }
     }
 }
 

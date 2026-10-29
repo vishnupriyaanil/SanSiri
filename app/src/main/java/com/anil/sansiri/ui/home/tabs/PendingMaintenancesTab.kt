@@ -24,7 +24,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -214,16 +215,17 @@ fun PendingMaintenancesTab(
         }
 
         // FAB to pay maintenance
-        ExtendedFloatingActionButton(
+        FloatingActionButton(
             onClick = onPayMaintenanceClicked,
-            icon = { Icon(imageVector = Icons.Default.Payments, contentDescription = null) },
-            text = { Text("Pay Maintenance", fontWeight = FontWeight.Bold) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(20.dp),
             containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        )
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            shape = CircleShape
+        ) {
+            Icon(imageVector = Icons.Default.Payments, contentDescription = "Pay Maintenance")
+        }
     }
 }
 
