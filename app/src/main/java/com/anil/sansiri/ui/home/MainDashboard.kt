@@ -57,6 +57,7 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -435,18 +436,28 @@ fun MainDashboard(
                         NavigationBarItem(
                             selected = uiState.selectedNavRoute == NavRouteItem.Announcements.route || uiState.selectedNavRoute == NavRouteItem.Home.route || uiState.selectedNavRoute == "HOME",
                             onClick = { viewModel.setSelectedNavRoute(NavRouteItem.Announcements.route) },
-                            icon = { Icon(imageVector = NavRouteItem.Announcements.icon, contentDescription = NavRouteItem.Announcements.title, modifier = Modifier.size(32.dp)) },
+                            icon = { Icon(imageVector = NavRouteItem.Announcements.icon, contentDescription = NavRouteItem.Announcements.title, modifier = Modifier.size(24.dp)) },
                             label = null,
-                            alwaysShowLabel = false
+                            alwaysShowLabel = false,
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                            )
                         )
 
                         // 2nd Tab: Requests
                         NavigationBarItem(
                             selected = uiState.selectedNavRoute == NavRouteItem.Requests.route,
                             onClick = { viewModel.setSelectedNavRoute(NavRouteItem.Requests.route) },
-                            icon = { Icon(imageVector = NavRouteItem.Requests.icon, contentDescription = NavRouteItem.Requests.title, modifier = Modifier.size(32.dp)) },
+                            icon = { Icon(imageVector = NavRouteItem.Requests.icon, contentDescription = NavRouteItem.Requests.title, modifier = Modifier.size(24.dp)) },
                             label = null,
-                            alwaysShowLabel = false
+                            alwaysShowLabel = false,
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                            )
                         )
 
                         // 3rd Tab: Payments
@@ -458,23 +469,33 @@ fun MainDashboard(
                                     BadgedBox(
                                         badge = { Badge { Text(unpaidMonthsCount.toString()) } }
                                     ) {
-                                        Icon(imageVector = NavRouteItem.Payments.icon, contentDescription = NavRouteItem.Payments.title, modifier = Modifier.size(32.dp))
+                                        Icon(imageVector = NavRouteItem.Payments.icon, contentDescription = NavRouteItem.Payments.title, modifier = Modifier.size(24.dp))
                                     }
                                 } else {
-                                    Icon(imageVector = NavRouteItem.Payments.icon, contentDescription = NavRouteItem.Payments.title, modifier = Modifier.size(32.dp))
+                                    Icon(imageVector = NavRouteItem.Payments.icon, contentDescription = NavRouteItem.Payments.title, modifier = Modifier.size(24.dp))
                                 }
                             },
                             label = null,
-                            alwaysShowLabel = false
+                            alwaysShowLabel = false,
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                            )
                         )
 
                         // 4th Tab: Concerns
                         NavigationBarItem(
                             selected = uiState.selectedNavRoute == NavRouteItem.Concerns.route,
                             onClick = { viewModel.setSelectedNavRoute(NavRouteItem.Concerns.route) },
-                            icon = { Icon(imageVector = NavRouteItem.Concerns.icon, contentDescription = NavRouteItem.Concerns.title, modifier = Modifier.size(32.dp)) },
+                            icon = { Icon(imageVector = NavRouteItem.Concerns.icon, contentDescription = NavRouteItem.Concerns.title, modifier = Modifier.size(24.dp)) },
                             label = null,
-                            alwaysShowLabel = false
+                            alwaysShowLabel = false,
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                            )
                         )
                     }
                 }
