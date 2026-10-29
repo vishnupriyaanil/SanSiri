@@ -426,16 +426,16 @@ fun MainDashboard(
                     "HOME"
                 )
                 if (isMainHomeRoute) {
-                    // 4 Main Navigation Tabs Bottom Bar (Standard spacious M3 height: 80.dp)
+                    // 4 Main Navigation Tabs Bottom Bar (Increased height: 100.dp)
                     NavigationBar(
                         containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                        modifier = Modifier.height(80.dp)
+                        modifier = Modifier.height(100.dp)
                     ) {
                         // 1st Tab: Announcements
                         NavigationBarItem(
                             selected = uiState.selectedNavRoute == NavRouteItem.Announcements.route || uiState.selectedNavRoute == NavRouteItem.Home.route || uiState.selectedNavRoute == "HOME",
                             onClick = { viewModel.setSelectedNavRoute(NavRouteItem.Announcements.route) },
-                            icon = { Icon(imageVector = NavRouteItem.Announcements.icon, contentDescription = NavRouteItem.Announcements.title) },
+                            icon = { Icon(imageVector = NavRouteItem.Announcements.icon, contentDescription = NavRouteItem.Announcements.title, modifier = Modifier.size(32.dp)) },
                             label = null,
                             alwaysShowLabel = false
                         )
@@ -444,7 +444,7 @@ fun MainDashboard(
                         NavigationBarItem(
                             selected = uiState.selectedNavRoute == NavRouteItem.Requests.route,
                             onClick = { viewModel.setSelectedNavRoute(NavRouteItem.Requests.route) },
-                            icon = { Icon(imageVector = NavRouteItem.Requests.icon, contentDescription = NavRouteItem.Requests.title) },
+                            icon = { Icon(imageVector = NavRouteItem.Requests.icon, contentDescription = NavRouteItem.Requests.title, modifier = Modifier.size(32.dp)) },
                             label = null,
                             alwaysShowLabel = false
                         )
@@ -458,10 +458,10 @@ fun MainDashboard(
                                     BadgedBox(
                                         badge = { Badge { Text(unpaidMonthsCount.toString()) } }
                                     ) {
-                                        Icon(imageVector = NavRouteItem.Payments.icon, contentDescription = NavRouteItem.Payments.title)
+                                        Icon(imageVector = NavRouteItem.Payments.icon, contentDescription = NavRouteItem.Payments.title, modifier = Modifier.size(32.dp))
                                     }
                                 } else {
-                                    Icon(imageVector = NavRouteItem.Payments.icon, contentDescription = NavRouteItem.Payments.title)
+                                    Icon(imageVector = NavRouteItem.Payments.icon, contentDescription = NavRouteItem.Payments.title, modifier = Modifier.size(32.dp))
                                 }
                             },
                             label = null,
@@ -472,7 +472,7 @@ fun MainDashboard(
                         NavigationBarItem(
                             selected = uiState.selectedNavRoute == NavRouteItem.Concerns.route,
                             onClick = { viewModel.setSelectedNavRoute(NavRouteItem.Concerns.route) },
-                            icon = { Icon(imageVector = NavRouteItem.Concerns.icon, contentDescription = NavRouteItem.Concerns.title) },
+                            icon = { Icon(imageVector = NavRouteItem.Concerns.icon, contentDescription = NavRouteItem.Concerns.title, modifier = Modifier.size(32.dp)) },
                             label = null,
                             alwaysShowLabel = false
                         )

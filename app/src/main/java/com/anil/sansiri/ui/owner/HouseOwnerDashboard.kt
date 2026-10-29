@@ -253,12 +253,14 @@ fun HouseOwnerDashboard(
                 )
         },
             bottomBar = {
-                NavigationBar {
+                NavigationBar(
+                    modifier = Modifier.height(100.dp)
+                ) {
                     ownerNavTabs.forEachIndexed { index, tab ->
                         NavigationBarItem(
                             selected = uiState.selectedTab == index,
                             onClick = { viewModel.setSelectedTab(index) },
-                            icon = { Icon(imageVector = tab.icon, contentDescription = tab.title) },
+                            icon = { Icon(imageVector = tab.icon, contentDescription = tab.title, modifier = Modifier.size(32.dp)) },
                             label = null,
                             alwaysShowLabel = false
                         )

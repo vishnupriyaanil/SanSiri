@@ -278,7 +278,8 @@ fun AdminDashboard(
         },
         bottomBar = {
             NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                modifier = Modifier.height(100.dp)
             ) {
                 navItems.forEach { tab ->
                     val isSelected = uiState.selectedTab == tab.tabIndex
@@ -301,10 +302,10 @@ fun AdminDashboard(
                                         }
                                     }
                                 ) {
-                                    Icon(imageVector = tab.icon, contentDescription = tab.title)
+                                    Icon(imageVector = tab.icon, contentDescription = tab.title, modifier = Modifier.size(32.dp))
                                 }
                             } else {
-                                Icon(imageVector = tab.icon, contentDescription = tab.title)
+                                Icon(imageVector = tab.icon, contentDescription = tab.title, modifier = Modifier.size(32.dp))
                             }
                         },
                         label = null,
