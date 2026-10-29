@@ -51,6 +51,77 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
+private val crossNames = listOf(
+    "1st Cross", "2nd Cross", "3rd Cross", "4th Cross", "5th Cross",
+    "6th Cross", "7th Cross", "8th Cross", "9th Cross", "10th Cross"
+)
+
+private val demoFirstNames = listOf("Aarav", "Vivaan", "Aditya", "Vihaan", "Arjun", "Sai", "Reyansh", "Ayaan", "Krishna", "Ishaan",
+    "Ananya", "Diya", "Saanvi", "Aadhya", "Pari", "Anika", "Navya", "Riya", "Meera", "Kavya",
+    "Ramesh", "Suresh", "Mahesh", "Rajesh", "Priya", "Sunita", "Deepa", "Manjunath", "Vijay", "Kavitha")
+private val demoLastNames = listOf("Kumar", "Sharma", "Patel", "Verma", "Reddy", "Rao", "Gupta", "Singh", "Joshi", "Nair", "Pillai", "Iyer")
+
+private fun generate10UsersAndHouses(): Pair<List<User>, List<HouseDetail>> {
+    val users = mutableListOf<User>()
+    val houses = mutableListOf<HouseDetail>()
+
+    users.add(User(uid = "super_admin_9964532102", phoneNumber = "+919964532102", name = "San Siri Super Admin", role = UserRole.SUPER_ADMIN))
+    users.add(User(uid = "admin_demo_123", phoneNumber = "+919876543210", name = "San Siri Admin", role = UserRole.ADMIN))
+    users.add(User(uid = "owner_123", phoneNumber = "+919123456789", name = "Anil Kumar", role = UserRole.USER))
+
+    val blockLetters = listOf("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
+
+    for (cIdx in crossNames.indices) {
+        val cross = crossNames[cIdx]
+        val block = blockLetters[cIdx % blockLetters.size]
+        for (h in 1..10) {
+            val idx = cIdx * 10 + h
+            val uid = "owner_cross_${cIdx + 1}_$h"
+            val houseId = "house_cross_${cIdx + 1}_$h"
+            val houseNum = "$block-${(cIdx + 1) * 100 + h}"
+            val name = "${demoFirstNames[(idx * 3) % demoFirstNames.size]} ${demoLastNames[(idx * 7) % demoLastNames.size]}"
+            val phone = "+9198${String.format(Locale.US, "%08d", 7654000 + idx)}"
+
+            users.add(
+                User(
+                    uid = uid,
+                    phoneNumber = phone,
+                    name = name,
+                    role = UserRole.USER,
+                    isPreRegisteredByAdmin = true
+                )
+            )
+
+            houses.add(
+                HouseDetail(
+                    id = houseId,
+                    ownerUid = uid,
+                    ownerName = name,
+                    ownerPhone = phone,
+                    propertyType = if (h % 3 == 0) PropertyType.INDIVIDUAL_HOUSE else PropertyType.APARTMENT,
+                    buildingName = "San Siri Residency",
+                    buildingNumber = "Block $block",
+                    floorNumber = ((h % 5) + 1).toString(),
+                    houseNumber = houseNum,
+                    crossStreet = cross,
+                    occupancyType = if (h % 2 == 0) OccupancyType.RENTED else OccupancyType.SELF_OCCUPIED,
+                    approvalStatus = ApprovalStatus.APPROVED,
+                    updatedAt = System.currentTimeMillis()
+                )
+            )
+        }
+    }
+    return Pair(users, houses)
+}
+
+private fun initialDemoUsers(): List<User> {
+    return generate10UsersAndHouses().first
+}
+
+private fun initialDemoHouses(): List<HouseDetail> {
+    return generate10UsersAndHouses().second
+}
+
 class SanSiriRepositoryImpl private constructor(private val context: Context) : SanSiriRepository {
 
     private val repositoryScope = CoroutineScope(Dispatchers.IO)
@@ -446,234 +517,6 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
             )
         }
 
-        private fun initialDemoUsers(): List<User> {
-            return listOf(
-                User(
-                    uid = "super_admin_9964532102",
-                    phoneNumber = "+919964532102",
-                    name = "San Siri Super Admin",
-                    role = UserRole.SUPER_ADMIN
-                ),
-                User(
-                    uid = "admin_demo_123",
-                    phoneNumber = "+919876543210",
-                    name = "San Siri Admin",
-                    role = UserRole.ADMIN
-                ),
-                User(
-                    uid = "owner_123",
-                    phoneNumber = "+919123456789",
-                    name = "Anil Kumar",
-                    role = UserRole.USER
-                ),
-                User(
-                    uid = "owner_demo_123",
-                    phoneNumber = "+919876543201",
-                    name = "Ramesh Kumar",
-                    role = UserRole.USER
-                ),
-                User(
-                    uid = "owner_demo_456",
-                    phoneNumber = "+919876543202",
-                    name = "Suresh Patel",
-                    role = UserRole.USER
-                ),
-                User(
-                    uid = "owner_demo_789",
-                    phoneNumber = "+919876543203",
-                    name = "Anil Verma",
-                    role = UserRole.USER
-                ),
-                User(
-                    uid = "owner_demo_101",
-                    phoneNumber = "+919876543204",
-                    name = "Priya Sharma",
-                    role = UserRole.USER
-                ),
-                User(
-                    uid = "owner_demo_202",
-                    phoneNumber = "+919876543205",
-                    name = "Vijay Reddy",
-                    role = UserRole.USER
-                ),
-                User(
-                    uid = "owner_demo_302",
-                    phoneNumber = "+919876543206",
-                    name = "Kavitha Nair",
-                    role = UserRole.USER
-                ),
-                User(
-                    uid = "owner_demo_401",
-                    phoneNumber = "+919876543207",
-                    name = "Rajesh Gupta",
-                    role = UserRole.USER
-                ),
-                User(
-                    uid = "owner_demo_402",
-                    phoneNumber = "+919876543208",
-                    name = "Deepa Singh",
-                    role = UserRole.USER
-                ),
-                User(
-                    uid = "owner_demo_501",
-                    phoneNumber = "+919876543209",
-                    name = "Manjunath Rao",
-                    role = UserRole.USER
-                ),
-                User(
-                    uid = "owner_demo_502",
-                    phoneNumber = "+919876543210",
-                    name = "Sunita Joshi",
-                    role = UserRole.USER
-                )
-            )
-        }
-
-        private fun initialDemoHouses(): List<HouseDetail> {
-            return listOf(
-                HouseDetail(
-                    id = "house_101",
-                    ownerUid = "owner_demo_123",
-                    ownerName = "Ramesh Kumar",
-                    ownerPhone = "+919876543201",
-                    propertyType = PropertyType.APARTMENT,
-                    buildingName = "San Siri Residency",
-                    buildingNumber = "Block A",
-                    floorNumber = "1",
-                    houseNumber = "A-101",
-                    crossStreet = "1st Cross",
-                    occupancyType = OccupancyType.SELF_OCCUPIED,
-                    approvalStatus = ApprovalStatus.APPROVED
-                ),
-                HouseDetail(
-                    id = "house_102",
-                    ownerUid = "owner_demo_456",
-                    ownerName = "Suresh Patel",
-                    ownerPhone = "+919876543202",
-                    propertyType = PropertyType.APARTMENT,
-                    buildingName = "San Siri Residency",
-                    buildingNumber = "Block A",
-                    floorNumber = "1",
-                    houseNumber = "A-102",
-                    crossStreet = "2nd Cross",
-                    occupancyType = OccupancyType.RENTED,
-                    approvalStatus = ApprovalStatus.APPROVED
-                ),
-                HouseDetail(
-                    id = "house_201",
-                    ownerUid = "owner_demo_789",
-                    ownerName = "Anil Verma",
-                    ownerPhone = "+919876543203",
-                    propertyType = PropertyType.APARTMENT,
-                    buildingName = "San Siri Residency",
-                    buildingNumber = "Block B",
-                    floorNumber = "2",
-                    houseNumber = "B-201",
-                    crossStreet = "3rd Cross",
-                    occupancyType = OccupancyType.SELF_OCCUPIED,
-                    approvalStatus = ApprovalStatus.APPROVED
-                ),
-                HouseDetail(
-                    id = "house_202",
-                    ownerUid = "owner_demo_101",
-                    ownerName = "Priya Sharma",
-                    ownerPhone = "+919876543204",
-                    propertyType = PropertyType.APARTMENT,
-                    buildingName = "San Siri Residency",
-                    buildingNumber = "Block B",
-                    floorNumber = "2",
-                    houseNumber = "B-202",
-                    crossStreet = "4th Cross",
-                    occupancyType = OccupancyType.RENTED,
-                    approvalStatus = ApprovalStatus.APPROVED
-                ),
-                HouseDetail(
-                    id = "house_301",
-                    ownerUid = "owner_demo_202",
-                    ownerName = "Vijay Reddy",
-                    ownerPhone = "+919876543205",
-                    propertyType = PropertyType.APARTMENT,
-                    buildingName = "San Siri Residency",
-                    buildingNumber = "Block C",
-                    floorNumber = "3",
-                    houseNumber = "C-301",
-                    crossStreet = "5th Cross",
-                    occupancyType = OccupancyType.SELF_OCCUPIED,
-                    approvalStatus = ApprovalStatus.APPROVED
-                ),
-                HouseDetail(
-                    id = "house_302",
-                    ownerUid = "owner_demo_302",
-                    ownerName = "Kavitha Nair",
-                    ownerPhone = "+919876543206",
-                    propertyType = PropertyType.APARTMENT,
-                    buildingName = "San Siri Residency",
-                    buildingNumber = "Block C",
-                    floorNumber = "3",
-                    houseNumber = "C-302",
-                    crossStreet = "6th Cross",
-                    occupancyType = OccupancyType.SELF_OCCUPIED,
-                    approvalStatus = ApprovalStatus.APPROVED
-                ),
-                HouseDetail(
-                    id = "house_401",
-                    ownerUid = "owner_demo_401",
-                    ownerName = "Rajesh Gupta",
-                    ownerPhone = "+919876543207",
-                    propertyType = PropertyType.APARTMENT,
-                    buildingName = "San Siri Residency",
-                    buildingNumber = "Block D",
-                    floorNumber = "4",
-                    houseNumber = "D-401",
-                    crossStreet = "7th Cross",
-                    occupancyType = OccupancyType.SELF_OCCUPIED,
-                    approvalStatus = ApprovalStatus.APPROVED
-                ),
-                HouseDetail(
-                    id = "house_402",
-                    ownerUid = "owner_demo_402",
-                    ownerName = "Deepa Singh",
-                    ownerPhone = "+919876543208",
-                    propertyType = PropertyType.APARTMENT,
-                    buildingName = "San Siri Residency",
-                    buildingNumber = "Block D",
-                    floorNumber = "4",
-                    houseNumber = "D-402",
-                    crossStreet = "1st Cross",
-                    occupancyType = OccupancyType.RENTED,
-                    approvalStatus = ApprovalStatus.APPROVED
-                ),
-                HouseDetail(
-                    id = "house_501",
-                    ownerUid = "owner_demo_501",
-                    ownerName = "Manjunath Rao",
-                    ownerPhone = "+919876543209",
-                    propertyType = PropertyType.APARTMENT,
-                    buildingName = "San Siri Residency",
-                    buildingNumber = "Block E",
-                    floorNumber = "5",
-                    houseNumber = "E-501",
-                    crossStreet = "2nd Cross",
-                    occupancyType = OccupancyType.SELF_OCCUPIED,
-                    approvalStatus = ApprovalStatus.APPROVED
-                ),
-                HouseDetail(
-                    id = "house_502",
-                    ownerUid = "owner_demo_502",
-                    ownerName = "Sunita Joshi",
-                    ownerPhone = "+919876543210",
-                    propertyType = PropertyType.APARTMENT,
-                    buildingName = "San Siri Residency",
-                    buildingNumber = "Block E",
-                    floorNumber = "5",
-                    houseNumber = "E-502",
-                    crossStreet = "3rd Cross",
-                    occupancyType = OccupancyType.RENTED,
-                    approvalStatus = ApprovalStatus.APPROVED
-                )
-            )
-        }
-
         private fun initialDemoNotifications(): List<AppNotification> {
             val now = System.currentTimeMillis()
             return listOf(
@@ -866,130 +709,48 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
 
         private fun initialDemoMonthlyStatuses(): List<MonthlyHouseStatus> {
             val recentMonths = getRecent4Months()
-            val m0 = recentMonths[0] // Current Month (Tab 1)
-            val m1 = recentMonths[1] // 1 Month Ago (Tab 2)
-            val m2 = recentMonths[2] // 2 Months Ago (Tab 3)
-            val m3 = recentMonths[3] // 3 Months Ago (Tab 4)
-
-            val flats = listOf(
-                Triple("house_101", "A-101", "Anil Kumar"),
-                Triple("house_102", "A-102", "Priya Sharma"),
-                Triple("house_201", "B-201", "Suresh Patel"),
-                Triple("house_202", "B-202", "Ramesh V"),
-                Triple("house_301", "C-301", "Kavitha Reddy"),
-                Triple("house_302", "C-302", "Rajesh Rao")
-            )
-
+            val houses = initialDemoHouses()
             val list = mutableListOf<MonthlyHouseStatus>()
 
-            for ((houseId, houseNumber, ownerName) in flats) {
-                val cross = when (houseNumber.take(1)) {
-                    "A" -> "1st Cross"
-                    "B" -> "2nd Cross"
-                    else -> "3rd Cross"
-                }
-                val rate = when (houseNumber) {
-                    "A-102", "B-202" -> 2000.0
-                    "C-302" -> 1200.0
+            for (house in houses) {
+                val rate = when (house.occupancyType) {
+                    OccupancyType.RENTED -> 2000.0
+                    OccupancyType.EMPTY_SITE -> 500.0
                     else -> 1500.0
                 }
 
-                // Month 0 (Current Month): Paid (A-101, B-201, C-302), Pending Approval (A-102, C-301), Unpaid (B-202)
-                val m0Paid = houseNumber in listOf("A-101", "B-201", "C-302")
-                val m0PendingRef = when (houseNumber) {
-                    "A-102" -> "UPI/2025/102"
-                    "C-301" -> "UPI/2025/301"
-                    else -> null
+                for (mIdx in recentMonths.indices) {
+                    val month = recentMonths[mIdx]
+                    val hash = (house.id.hashCode() + mIdx * 19).let { if (it < 0) -it else it }
+                    val mod = hash % 3
+
+                    val isPaid = mod == 0
+                    val isPending = mod == 1
+                    val paymentStatus = when {
+                        isPaid -> PaymentStatus.APPROVED
+                        isPending -> PaymentStatus.PENDING
+                        else -> PaymentStatus.PENDING
+                    }
+                    val txnRef = if (isPaid) "TXN-M$mIdx-${house.houseNumber.replace("-", "")}" else if (isPending) "UPI/2025/${hash % 9000 + 1000}" else null
+                    val payDate = if (isPaid || isPending) "$month ${(hash % 25) + 1}" else null
+
+                    list.add(
+                        MonthlyHouseStatus(
+                            houseId = house.id,
+                            houseNumber = house.houseNumber,
+                            ownerName = house.ownerName,
+                            monthYear = month,
+                            isPaid = isPaid,
+                            amount = rate,
+                            paymentDate = payDate,
+                            transactionRef = txnRef,
+                            paymentStatus = paymentStatus,
+                            crossStreet = house.crossStreet,
+                            paymentId = if (isPaid || isPending) "pay_${house.id}_m$mIdx" else null
+                        )
+                    )
                 }
-                val m0Date = when (houseNumber) {
-                    "A-101" -> "$m0 04"
-                    "B-201" -> "$m0 06"
-                    "C-302" -> "$m0 08"
-                    else -> null
-                }
-                val m0Ref = if (m0Paid) "TXN-M0-${houseNumber.replace("-", "")}" else m0PendingRef
-
-                list.add(
-                    MonthlyHouseStatus(
-                        houseId = houseId,
-                        houseNumber = houseNumber,
-                        ownerName = ownerName,
-                        monthYear = m0,
-                        isPaid = m0Paid,
-                        paymentStatus = if (m0Paid) PaymentStatus.APPROVED else PaymentStatus.PENDING,
-                        crossStreet = cross,
-                        amount = rate,
-                        paymentDate = m0Date,
-                        transactionRef = m0Ref
-                    )
-                )
-
-                // Month 1 (1 Month Ago): 5 Paid, 1 Unpaid (B-202)
-                val m1Paid = houseNumber != "B-202"
-                val m1Date = when (houseNumber) {
-                    "A-101" -> "$m1 03"
-                    "A-102" -> "$m1 05"
-                    "B-201" -> "$m1 07"
-                    "C-301" -> "$m1 10"
-                    "C-302" -> "$m1 12"
-                    else -> null
-                }
-                val m1Ref = if (m1Paid) "TXN-M1-${houseNumber.replace("-", "")}" else null
-
-                list.add(
-                    MonthlyHouseStatus(
-                        houseId = houseId,
-                        houseNumber = houseNumber,
-                        ownerName = ownerName,
-                        monthYear = m1,
-                        isPaid = m1Paid,
-                        paymentStatus = if (m1Paid) PaymentStatus.APPROVED else PaymentStatus.PENDING,
-                        crossStreet = cross,
-                        amount = rate,
-                        paymentDate = m1Date,
-                        transactionRef = m1Ref
-                    )
-                )
-
-                // Month 2 (2 Months Ago): All Paid
-                val m2Date = "$m2 05"
-                val m2Ref = "TXN-M2-${houseNumber.replace("-", "")}"
-
-                list.add(
-                    MonthlyHouseStatus(
-                        houseId = houseId,
-                        houseNumber = houseNumber,
-                        ownerName = ownerName,
-                        monthYear = m2,
-                        isPaid = true,
-                        paymentStatus = PaymentStatus.APPROVED,
-                        crossStreet = cross,
-                        amount = rate,
-                        paymentDate = m2Date,
-                        transactionRef = m2Ref
-                    )
-                )
-
-                // Month 3 (3 Months Ago): All Paid
-                val m3Date = "$m3 05"
-                val m3Ref = "TXN-M3-${houseNumber.replace("-", "")}"
-
-                list.add(
-                    MonthlyHouseStatus(
-                        houseId = houseId,
-                        houseNumber = houseNumber,
-                        ownerName = ownerName,
-                        monthYear = m3,
-                        isPaid = true,
-                        paymentStatus = PaymentStatus.APPROVED,
-                        crossStreet = cross,
-                        amount = rate,
-                        paymentDate = m3Date,
-                        transactionRef = m3Ref
-                    )
-                )
             }
-
             return list
         }
     }

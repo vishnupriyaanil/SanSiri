@@ -1,10 +1,14 @@
 package com.anil.sansiri.ui.home
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -184,6 +188,15 @@ private fun FourMonthsStatusView(
         listOf("All Crosses") + (1..10).map { "${it}st Cross".replace("1st Cross", "1st Cross").replace("2st Cross", "2nd Cross").replace("3st Cross", "3rd Cross").replace("4st Cross", "4th Cross").replace("5st Cross", "5th Cross").replace("6st Cross", "6th Cross").replace("7st Cross", "7th Cross").replace("8st Cross", "8th Cross").replace("9st Cross", "9th Cross").replace("10st Cross", "10th Cross") }
     }
 
+    val crossNames = remember {
+        listOf("1st Cross", "2nd Cross", "3rd Cross", "4th Cross", "5th Cross", "6th Cross", "7th Cross", "8th Cross", "9th Cross", "10th Cross")
+    }
+
+    val expandedCrosses = remember { mutableStateMapOf<String, Boolean>() }
+    crossNames.forEach { cross ->
+        if (!expandedCrosses.containsKey(cross)) expandedCrosses[cross] = true
+    }
+
     val monthFilteredList = monthlyStatuses.filter { item ->
         item.monthYear.equals(selectedMonth, ignoreCase = true) ||
         (item.monthYear.take(3).equals(selectedMonth.take(3), ignoreCase = true) &&
@@ -203,36 +216,34 @@ private fun FourMonthsStatusView(
         }
     }
 
-    val crossFilteredList = statusFilteredList.filter { item ->
-        if (selectedCrossFilter == "All Crosses") true
-        else {
-            val itemCross = if (item.crossStreet.isNotBlank()) item.crossStreet else when (item.houseNumber.take(1)) {
-                "A" -> "1st Cross"
-                "B" -> "2nd Cross"
-                "C" -> "3rd Cross"
-                else -> "1st Cross"
-            }
-            itemCross.equals(selectedCrossFilter, ignoreCase = true) || itemCross.contains(selectedCrossFilter, ignoreCase = true)
-        }
-    }
-
-    val finalSortedList = when (selectedSortOption) {
-        MaintenanceSortOption.BY_STATUS -> crossFilteredList.sortedWith(
-            compareBy<MonthlyHouseStatus> { item ->
-                val isPaid = item.isPaid || item.paymentStatus == PaymentStatus.APPROVED
-                val isPending = !isPaid && (!item.transactionRef.isNullOrBlank() || item.paymentStatus == PaymentStatus.PENDING)
-                when {
-                    isPending -> 0
-                    !isPaid -> 1
-                    else -> 2
-                }
-            }.thenBy { it.houseNumber }
-        )
-        MaintenanceSortOption.BY_NAME -> crossFilteredList.sortedBy { it.ownerName.lowercase() }
-        MaintenanceSortOption.BY_HOUSE_NUMBER -> crossFilteredList.sortedBy { it.houseNumber.lowercase() }
-    }
-
     Column(modifier = Modifier.fillMaxSize()) {
+        // Gradient header banner on the Payments tab (#006A60 to #004D40)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                        colors = listOf(Color(0xFF006A60), Color(0xFF004D40))
+                    )
+                )
+                .padding(20.dp)
+        ) {
+            Column {
+                Text(
+                    text = "San Siri Payments & Dues",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Track multi-cross resident payment status across all 10 crosses",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.85f)
+                )
+            }
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -265,21 +276,30 @@ private fun FourMonthsStatusView(
             }
         }
 
-        SecondaryTabRow(
-            selectedTabIndex = selectedMonthIndex,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            months.forEachIndexed { index, monthLabel ->
-                Tab(
-                    selected = selectedMonthIndex == index,
-                    onClick = { selectedMonthIndex = index },
-                    text = {
-                        Text(
-                            text = monthLabel,
-                            fontWeight = if (selectedMonthIndex == index) FontWeight.Bold else FontWeight.Normal
-                        )
-                    }
-                )
+        // AnimatedContent for smooth cross-fading tab switches
+        AnimatedContent(
+            targetState = selectedMonthIndex,
+            transitionSpec = {
+                fadeIn() togetherWith fadeOut()
+            },
+            label = "MonthTabAnimation"
+        ) { targetIndex ->
+            SecondaryTabRow(
+                selectedTabIndex = targetIndex,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                months.forEachIndexed { index, monthLabel ->
+                    Tab(
+                        selected = targetIndex == index,
+                        onClick = { selectedMonthIndex = index },
+                        text = {
+                            Text(
+                                text = monthLabel,
+                                fontWeight = if (targetIndex == index) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    )
+                }
             }
         }
 
@@ -317,28 +337,49 @@ private fun FourMonthsStatusView(
         }
 
         if (showFilterDialog) {
-            PaymentStatusFilterDialog(
-                currentStatusFilter = selectedStatusFilter,
-                currentCrossFilter = selectedCrossFilter,
-                currentSortOption = selectedSortOption,
-                crossOptions = crossOptions,
-                onDismissRequest = { showFilterDialog = false },
-                onApply = { status, cross, sort ->
-                    selectedStatusFilter = status
-                    selectedCrossFilter = cross
-                    selectedSortOption = sort
-                },
-                onReset = {
-                    selectedStatusFilter = MaintenanceStatusFilter.ALL
-                    selectedCrossFilter = "All Crosses"
-                    selectedSortOption = MaintenanceSortOption.BY_STATUS
-                }
-            )
+            AnimatedVisibility(
+                visible = showFilterDialog,
+                enter = scaleIn() + fadeIn(),
+                exit = fadeOut()
+            ) {
+                PaymentStatusFilterDialog(
+                    currentStatusFilter = selectedStatusFilter,
+                    currentCrossFilter = selectedCrossFilter,
+                    currentSortOption = selectedSortOption,
+                    crossOptions = crossOptions,
+                    onDismissRequest = { showFilterDialog = false },
+                    onApply = { status, cross, sort ->
+                        selectedStatusFilter = status
+                        selectedCrossFilter = cross
+                        selectedSortOption = sort
+                    },
+                    onReset = {
+                        selectedStatusFilter = MaintenanceStatusFilter.ALL
+                        selectedCrossFilter = "All Crosses"
+                        selectedSortOption = MaintenanceSortOption.BY_STATUS
+                    }
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        if (finalSortedList.isEmpty()) {
+        val targetCrosses = if (selectedCrossFilter == "All Crosses") crossNames else listOf(selectedCrossFilter)
+        val crossGroupedMap = targetCrosses.associateWith { cross ->
+            statusFilteredList.filter { item ->
+                val itemCross = if (item.crossStreet.isNotBlank()) item.crossStreet else when (item.houseNumber.take(1)) {
+                    "A" -> "1st Cross"
+                    "B" -> "2nd Cross"
+                    "C" -> "3rd Cross"
+                    else -> "1st Cross"
+                }
+                itemCross.equals(cross, ignoreCase = true) || itemCross.contains(cross, ignoreCase = true)
+            }
+        }
+
+        val hasAnyRecords = crossGroupedMap.values.any { it.isNotEmpty() }
+
+        if (!hasAnyRecords) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -358,14 +399,106 @@ private fun FourMonthsStatusView(
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(finalSortedList, key = { "${it.houseId}_${it.houseNumber}_${it.monthYear}" }) { item ->
-                    MonthlyPaymentCard(
-                        item = item,
-                        isAdmin = isAdmin,
-                        onApprove = {
-                            onApprovePayment?.invoke(item.houseId, item.monthYear)
+                crossNames.forEach { cross ->
+                    val residentsForCross = crossGroupedMap[cross] ?: emptyList()
+                    if (selectedCrossFilter == "All Crosses" || selectedCrossFilter.equals(cross, ignoreCase = true)) {
+                        if (residentsForCross.isNotEmpty() || selectedCrossFilter != "All Crosses") {
+                            val sortedResidents = when (selectedSortOption) {
+                                MaintenanceSortOption.BY_STATUS -> residentsForCross.sortedWith(
+                                    compareBy<MonthlyHouseStatus> { item ->
+                                        val isPaid = item.isPaid || item.paymentStatus == PaymentStatus.APPROVED
+                                        val isPending = !isPaid && (!item.transactionRef.isNullOrBlank() || item.paymentStatus == PaymentStatus.PENDING)
+                                        when {
+                                            isPending -> 0
+                                            !isPaid -> 1
+                                            else -> 2
+                                        }
+                                    }.thenBy { it.houseNumber }
+                                )
+                                MaintenanceSortOption.BY_NAME -> residentsForCross.sortedBy { it.ownerName.lowercase() }
+                                MaintenanceSortOption.BY_HOUSE_NUMBER -> residentsForCross.sortedBy { it.houseNumber.lowercase() }
+                            }
+
+                            val isExpanded = expandedCrosses[cross] != false
+
+                            item(key = "cross_section_$cross") {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                ) {
+                                    Column(modifier = Modifier.fillMaxWidth()) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable { expandedCrosses[cross] = !isExpanded }
+                                                .padding(16.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Surface(
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    shape = CircleShape,
+                                                    modifier = Modifier.size(32.dp)
+                                                ) {
+                                                    Box(contentAlignment = Alignment.Center) {
+                                                        Icon(
+                                                            imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
+                                                            contentDescription = null,
+                                                            tint = Color.White,
+                                                            modifier = Modifier.size(16.dp)
+                                                        )
+                                                    }
+                                                }
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Text(
+                                                    text = "$cross (${sortedResidents.size} Residents)",
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+
+                                            Icon(
+                                                imageVector = Icons.Default.ArrowDropDown,
+                                                contentDescription = if (isExpanded) "Collapse" else "Expand",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
+
+                                        AnimatedVisibility(
+                                            visible = isExpanded,
+                                            enter = fadeIn() + expandVertically(),
+                                            exit = fadeOut() + shrinkVertically()
+                                        ) {
+                                            Column(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                sortedResidents.forEach { item ->
+                                                    MonthlyPaymentCard(
+                                                        item = item,
+                                                        isAdmin = isAdmin,
+                                                        onApprove = {
+                                                            onApprovePayment?.invoke(item.houseId, item.monthYear)
+                                                        }
+                                                    )
+                                                }
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
-                    )
+                    }
                 }
             }
         }
@@ -384,9 +517,9 @@ private fun MonthlyPaymentCard(
     val isPending = !isPaid && (!item.transactionRef.isNullOrBlank() || item.paymentStatus == PaymentStatus.PENDING)
 
     val backgroundColor = when {
-        isPaid -> Color(0xFFE8F5E9)      // Soft Green (#E8F5E9)
-        isPending -> Color(0xFFFFF8E1)   // Soft Amber (#FFF8E1)
-        else -> Color(0xFFFFEBEE)        // Soft Red (#FFEBEE)
+        isPaid -> Color(0xFFE8F5E9)      // Soft Green
+        isPending -> Color(0xFFFFF8E1)   // Soft Amber
+        else -> Color(0xFFFFEBEE)        // Soft Red
     }
 
     val textColor = when {
@@ -428,181 +561,193 @@ private fun MonthlyPaymentCard(
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // High-contrast left accent bar
+            Box(
+                modifier = Modifier
+                    .width(6.dp)
+                    .height(110.dp)
+                    .background(badgeBgColor)
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .background(
-                                color = when {
-                                    isPaid -> Color(0xFFC8E6C9)
-                                    isPending -> Color(0xFFFFECB3)
-                                    else -> Color(0xFFFFCDD2)
-                                },
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = statusIcon,
-                            contentDescription = null,
-                            tint = textColor,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column {
-                        Text(
-                            text = "Flat ${item.houseNumber}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = textColor
-                        )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = textColor,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = item.ownerName.ifBlank { "Resident" },
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = textColor
-                            )
-                        }
-                        if (isPaid && !item.paymentDate.isNullOrBlank()) {
-                            Text(
-                                text = "Paid on ${item.paymentDate}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = textColor.copy(alpha = 0.8f)
-                            )
-                        } else if (isPending && !item.transactionRef.isNullOrBlank()) {
-                            Text(
-                                text = "Ref: ${item.transactionRef}",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = textColor.copy(alpha = 0.9f)
-                            )
-                        }
-                    }
-                }
-
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "₹${item.amount.toInt()}",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = textColor
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Surface(
-                        color = badgeBgColor,
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = badgeText,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
-                }
-            }
-
-            // Quick Approval Action Button for Admins if Pending Approval
-            if (isPending && isAdmin && onApprove != null) {
-                Spacer(modifier = Modifier.height(10.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(
-                        onClick = onApprove,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF2E7D32),
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.height(38.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Approve",
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Approve",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .background(
+                                    color = when {
+                                        isPaid -> Color(0xFFC8E6C9)
+                                        isPending -> Color(0xFFFFECB3)
+                                        else -> Color(0xFFFFCDD2)
+                                    },
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = statusIcon,
+                                contentDescription = null,
+                                tint = textColor,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
 
-            AnimatedVisibility(
-                visible = expanded,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp)
-                ) {
-                    HorizontalDivider(color = borderColor.copy(alpha = 0.5f))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column {
+                            Text(
+                                text = "Flat ${item.houseNumber}",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = textColor
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = textColor,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = item.ownerName.ifBlank { "Resident" },
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = textColor
+                                )
+                            }
+                            if (isPaid && !item.paymentDate.isNullOrBlank()) {
+                                Text(
+                                    text = "Paid on ${item.paymentDate}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = textColor.copy(alpha = 0.8f)
+                                )
+                            } else if (isPending && !item.transactionRef.isNullOrBlank()) {
+                                Text(
+                                    text = "Ref: ${item.transactionRef}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = textColor.copy(alpha = 0.9f)
+                                )
+                            }
+                        }
+                    }
+
+                    Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "Billing Month:",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = textColor
-                        )
-                        Text(
-                            text = item.monthYear,
-                            style = MaterialTheme.typography.bodySmall,
+                            text = "₹${item.amount.toInt()}",
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = textColor
                         )
-                    }
-                    if (!item.transactionRef.isNullOrBlank()) {
+
                         Spacer(modifier = Modifier.height(4.dp))
+
+                        Surface(
+                            color = badgeBgColor,
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = badgeText,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+
+                if (isPending && isAdmin && onApprove != null) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Button(
+                            onClick = onApprove,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF2E7D32),
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.height(38.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Approve",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Approve",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = expanded,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp)
+                    ) {
+                        HorizontalDivider(color = borderColor.copy(alpha = 0.5f))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Transaction Ref:",
+                                text = "Billing Month:",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = textColor
                             )
                             Text(
-                                text = item.transactionRef,
+                                text = item.monthYear,
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Bold,
                                 color = textColor
                             )
+                        }
+                        if (!item.transactionRef.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Transaction Ref:",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = textColor
+                                )
+                                Text(
+                                    text = item.transactionRef,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = textColor
+                                )
+                            }
                         }
                     }
                 }
