@@ -1016,6 +1016,12 @@ class FakeSanSiriRepository : SanSiriRepository {
         return Result.success(updated)
     }
 
+    override suspend fun updateSocietyContact(contact: SocietyContact): Result<SocietyContact> {
+        val list = societyContactsFlow.value.map { if (it.id == contact.id) contact else it }
+        societyContactsFlow.value = list
+        return Result.success(contact)
+    }
+
     override suspend fun deleteSocietyContact(contactId: String): Result<Unit> {
         val list = societyContactsFlow.value.filterNot { it.id == contactId }
         societyContactsFlow.value = list

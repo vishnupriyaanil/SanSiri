@@ -399,6 +399,32 @@ class SanSiriDataAndAuthTest {
     }
 
     @Test
+    fun testUpdateSocietyContact() = runTest {
+        val homeViewModel = HomeViewModel(fakeRepository)
+        authViewModel.quickDemoLogin(UserRole.ADMIN)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val initialContacts = homeViewModel.uiState.value.societyContacts
+        val contactToUpdate = initialContacts.first()
+
+        val updatedContact = contactToUpdate.copy(
+            category = "Updated Category",
+            contactPersonName = "Updated Name",
+            phoneNumber = "9999988888"
+        )
+
+        homeViewModel.updateSocietyContact(updatedContact)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val contactsAfterUpdate = homeViewModel.uiState.value.societyContacts
+        val found = contactsAfterUpdate.find { it.id == contactToUpdate.id }
+        assertNotNull(found)
+        assertEquals("Updated Category", found?.category)
+        assertEquals("Updated Name", found?.contactPersonName)
+        assertEquals("9999988888", found?.phoneNumber)
+    }
+
+    @Test
     fun testPublishAndObserveNotification() = runTest {
         val homeViewModel = HomeViewModel(fakeRepository)
         testDispatcher.scheduler.advanceUntilIdle()

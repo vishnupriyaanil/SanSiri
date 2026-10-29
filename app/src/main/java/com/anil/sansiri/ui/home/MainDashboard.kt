@@ -577,6 +577,9 @@ fun MainDashboard(
                             onAddContact = { category, name, phone ->
                                 viewModel.addSocietyContact(category, name, phone)
                             },
+                            onUpdateContact = { contact ->
+                                viewModel.updateSocietyContact(contact)
+                            },
                             onDeleteContact = { contactId ->
                                 viewModel.deleteSocietyContact(contactId)
                             }

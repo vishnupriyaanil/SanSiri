@@ -881,6 +881,17 @@ class HomeViewModel(private val repository: SanSiriRepository) : ViewModel() {
         }
     }
 
+    fun updateSocietyContact(contact: SocietyContact) {
+        viewModelScope.launch {
+            val result = repository.updateSocietyContact(contact)
+            if (result.isSuccess) {
+                _uiState.update { it.copy(statusMessage = "Contact updated successfully!") }
+            } else {
+                _uiState.update { it.copy(errorMessage = result.exceptionOrNull()?.message ?: "Failed to update contact") }
+            }
+        }
+    }
+
     fun deleteSocietyContact(contactId: String) {
         viewModelScope.launch {
             val result = repository.deleteSocietyContact(contactId)

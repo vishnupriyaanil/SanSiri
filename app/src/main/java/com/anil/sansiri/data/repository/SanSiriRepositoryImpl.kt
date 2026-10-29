@@ -1813,6 +1813,17 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
         }
     }
 
+    override suspend fun updateSocietyContact(contact: SocietyContact): Result<SocietyContact> {
+        return try {
+            val list = societyContactsFlow.value.map { if (it.id == contact.id) contact else it }
+            societyContactsFlow.value = list
+            firestore?.collection("society_contacts")?.document(contact.id)?.set(contact)
+            Result.success(contact)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun deleteSocietyContact(contactId: String): Result<Unit> {
         return try {
             val list = societyContactsFlow.value.filterNot { it.id == contactId }

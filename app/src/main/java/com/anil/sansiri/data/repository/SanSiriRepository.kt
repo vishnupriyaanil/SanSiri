@@ -209,6 +209,7 @@ interface SanSiriRepository {
     // Society Contacts
     fun getSocietyContacts(): Flow<List<SocietyContact>>
     suspend fun addSocietyContact(contact: SocietyContact): Result<SocietyContact>
+    suspend fun updateSocietyContact(contact: SocietyContact): Result<SocietyContact>
     suspend fun deleteSocietyContact(contactId: String): Result<Unit>
 
     // Community Notifications

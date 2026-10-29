@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -25,6 +24,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.ContactPhone
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.AlertDialog
@@ -62,12 +62,14 @@ fun SocietyContactsScreen(
     contacts: List<SocietyContact>,
     currentUser: User?,
     onAddContact: (category: String, name: String, phone: String) -> Unit,
+    onUpdateContact: (contact: SocietyContact) -> Unit,
     onDeleteContact: (contactId: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val isAdmin = currentUser?.isAdminOrSuperAdmin == true
     var showAddDialog by remember { mutableStateOf(false) }
+    var contactToEdit by remember { mutableStateOf<SocietyContact?>(null) }
     var contactToDelete by remember { mutableStateOf<SocietyContact?>(null) }
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -142,6 +144,7 @@ fun SocietyContactsScreen(
                                 context.startActivity(intent)
                             }
                         },
+                        onEdit = { contactToEdit = contact },
                         onDelete = { contactToDelete = contact }
                     )
                 }
@@ -168,6 +171,17 @@ fun SocietyContactsScreen(
             onConfirm = { category, name, phone ->
                 onAddContact(category, name, phone)
                 showAddDialog = false
+            }
+        )
+    }
+
+    if (contactToEdit != null) {
+        EditSocietyContactDialog(
+            contact = contactToEdit!!,
+            onDismiss = { contactToEdit = null },
+            onConfirm = { updatedContact ->
+                onUpdateContact(updatedContact)
+                contactToEdit = null
             }
         )
     }
@@ -226,6 +240,7 @@ private fun SocietyContactCard(
     contact: SocietyContact,
     isAdmin: Boolean,
     onCall: () -> Unit,
+    onEdit: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -263,15 +278,28 @@ private fun SocietyContactCard(
                     }
 
                     if (isAdmin) {
-                        IconButton(
-                            onClick = onDelete,
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete Contact",
-                                tint = Color.White.copy(alpha = 0.9f)
-                            )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(
+                                onClick = onEdit,
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit Contact",
+                                    tint = Color.White.copy(alpha = 0.9f)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            IconButton(
+                                onClick = onDelete,
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete Contact",
+                                    tint = Color.White.copy(alpha = 0.9f)
+                                )
+                            }
                         }
                     }
                 }
@@ -442,6 +470,117 @@ private fun AddSocietyContactDialog(
                 )
             ) {
                 Text("Add Contact")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+private fun EditSocietyContactDialog(
+    contact: SocietyContact,
+    onDismiss: () -> Unit,
+    onConfirm: (updatedContact: SocietyContact) -> Unit
+) {
+    var category by remember(contact) { mutableStateOf(contact.category) }
+    var contactPersonName by remember(contact) { mutableStateOf(contact.contactPersonName) }
+    var phoneNumber by remember(contact) { mutableStateOf(contact.phoneNumber.filter { it.isDigit() }.takeLast(10)) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Edit Society Contact",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage!!,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+
+                OutlinedTextField(
+                    value = category,
+                    onValueChange = {
+                        category = it
+                        errorMessage = null
+                    },
+                    label = { Text("Category Name (e.g., Electrical Issues)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = contactPersonName,
+                    onValueChange = {
+                        contactPersonName = it
+                        errorMessage = null
+                    },
+                    label = { Text("Contact Person Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = phoneNumber,
+                    onValueChange = { input ->
+                        phoneNumber = input.filter { it.isDigit() }.take(10)
+                        errorMessage = null
+                    },
+                    label = { Text("Phone Number (10 Digits)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val trimmedCategory = category.trim()
+                    val trimmedName = contactPersonName.trim()
+                    val trimmedPhone = phoneNumber.trim()
+
+                    if (trimmedCategory.isEmpty()) {
+                        errorMessage = "Please enter category name"
+                        return@Button
+                    }
+                    if (trimmedName.isEmpty()) {
+                        errorMessage = "Please enter contact person name"
+                        return@Button
+                    }
+                    if (trimmedPhone.length != 10) {
+                        errorMessage = "Phone number must be exactly 10 digits"
+                        return@Button
+                    }
+
+                    val updatedContact = contact.copy(
+                        category = trimmedCategory,
+                        contactPersonName = trimmedName,
+                        phoneNumber = trimmedPhone
+                    )
+                    onConfirm(updatedContact)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF006A60),
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Save Changes")
             }
         },
         dismissButton = {
