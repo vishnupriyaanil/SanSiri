@@ -66,9 +66,10 @@ class AdminViewModelTest {
 
         val updatedState = viewModel.uiState.value
         assertEquals(0, updatedState.pendingHouses.size)
-        assertEquals(1, updatedState.approvedHouses.size)
-        assertEquals("A-101", updatedState.approvedHouses.first().houseNumber)
-        assertEquals(ApprovalStatus.APPROVED, updatedState.approvedHouses.first().approvalStatus)
+        val approvedHouse = updatedState.approvedHouses.find { it.id == "house_pending_1" }
+        assertNotNull(approvedHouse)
+        assertEquals("A-101", approvedHouse?.houseNumber)
+        assertEquals(ApprovalStatus.APPROVED, approvedHouse?.approvalStatus)
         assertNotNull(updatedState.statusMessage)
     }
 
@@ -95,7 +96,7 @@ class AdminViewModelTest {
 
         val updatedState = viewModel.uiState.value
         assertEquals(0, updatedState.pendingHouses.size)
-        assertEquals(0, updatedState.approvedHouses.size)
+        assertTrue(updatedState.approvedHouses.none { it.id == "house_pending_2" })
         assertNotNull(updatedState.statusMessage)
 
         val houseInRepo = fakeRepository.getAllHouses().first().find { it.id == "house_pending_2" }

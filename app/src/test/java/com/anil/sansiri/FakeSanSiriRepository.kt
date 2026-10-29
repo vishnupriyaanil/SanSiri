@@ -44,24 +44,8 @@ class FakeSanSiriRepository : SanSiriRepository {
     )
 
     private val currentUserFlow = MutableStateFlow<User?>(null)
-    private val usersFlow = MutableStateFlow<List<User>>(
-        listOf(
-            superAdmin,
-            User(
-                uid = "admin_123",
-                phoneNumber = "+919876543210",
-                name = "San Siri Admin",
-                role = UserRole.ADMIN
-            ),
-            User(
-                uid = "owner_123",
-                phoneNumber = "+919123456789",
-                name = "Anil Kumar",
-                role = UserRole.USER
-            )
-        )
-    )
-    private val housesFlow = MutableStateFlow<List<HouseDetail>>(emptyList())
+    private val usersFlow = MutableStateFlow<List<User>>(initialFakeUsers())
+    private val housesFlow = MutableStateFlow<List<HouseDetail>>(initialFakeHouses())
     private val announcementsFlow = MutableStateFlow<List<Announcement>>(
         listOf(
             Announcement(
@@ -114,9 +98,7 @@ class FakeSanSiriRepository : SanSiriRepository {
             )
         )
     )
-    private val crossRepresentativesFlow = MutableStateFlow<Map<String, String>>(
-        mapOf("1st Cross" to "owner_123")
-    )
+    private val crossRepresentativesFlow = MutableStateFlow<Map<String, String>>(initialFakeCrossReps())
     private val requestCommentsFlow = MutableStateFlow<List<RequestComment>>(
         listOf(
             RequestComment(
@@ -1073,5 +1055,243 @@ class FakeSanSiriRepository : SanSiriRepository {
     override suspend fun clearNotifications(): Result<Unit> {
         notificationsFlow.value = emptyList()
         return Result.success(Unit)
+    }
+
+    private fun initialFakeCrossReps(): Map<String, String> {
+        return mapOf(
+            "1st Cross" to "owner_demo_123",
+            "2nd Cross" to "owner_demo_456",
+            "3rd Cross" to "owner_demo_789",
+            "4th Cross" to "owner_demo_101",
+            "5th Cross" to "owner_demo_202",
+            "6th Cross" to "owner_demo_302",
+            "7th Cross" to "owner_demo_401",
+            "8th Cross" to "owner_demo_402",
+            "9th Cross" to "owner_demo_501",
+            "10th Cross" to "owner_demo_502"
+        )
+    }
+
+    private fun initialFakeUsers(): List<User> {
+        return listOf(
+            superAdmin,
+            User(
+                uid = "admin_123",
+                phoneNumber = "+919876543210",
+                name = "San Siri Admin",
+                role = UserRole.ADMIN
+            ),
+            User(
+                uid = "owner_123",
+                phoneNumber = "+919123456789",
+                name = "Anil Kumar",
+                role = UserRole.USER
+            ),
+            User(
+                uid = "owner_demo_123",
+                phoneNumber = "+919123456789",
+                name = "Anil Kumar",
+                role = UserRole.USER
+            ),
+            User(
+                uid = "owner_demo_456",
+                phoneNumber = "+919888877777",
+                name = "Priya Sharma",
+                role = UserRole.USER
+            ),
+            User(
+                uid = "owner_demo_789",
+                phoneNumber = "+919777766666",
+                name = "Suresh Patel",
+                role = UserRole.USER
+            ),
+            User(
+                uid = "owner_demo_101",
+                phoneNumber = "+919666655555",
+                name = "Ramesh V",
+                role = UserRole.USER
+            ),
+            User(
+                uid = "owner_demo_202",
+                phoneNumber = "+919555544444",
+                name = "Kavitha Reddy",
+                role = UserRole.USER
+            ),
+            User(
+                uid = "owner_demo_302",
+                phoneNumber = "+919444433333",
+                name = "Rajesh Rao",
+                role = UserRole.USER
+            ),
+            User(
+                uid = "owner_demo_401",
+                phoneNumber = "+919333322222",
+                name = "Deepak Verma",
+                role = UserRole.USER
+            ),
+            User(
+                uid = "owner_demo_402",
+                phoneNumber = "+919222211111",
+                name = "Sunita Nair",
+                role = UserRole.USER
+            ),
+            User(
+                uid = "owner_demo_501",
+                phoneNumber = "+919111100000",
+                name = "Vikram Singh",
+                role = UserRole.USER
+            ),
+            User(
+                uid = "owner_demo_502",
+                phoneNumber = "+919000099999",
+                name = "Meena Joshi",
+                role = UserRole.USER
+            )
+        )
+    }
+
+    private fun initialFakeHouses(): List<HouseDetail> {
+        return listOf(
+            HouseDetail(
+                id = "house_101",
+                ownerUid = "owner_demo_123",
+                ownerName = "Anil Kumar",
+                ownerPhone = "+919123456789",
+                propertyType = PropertyType.APARTMENT,
+                buildingName = "San Siri Residency",
+                buildingNumber = "Block A",
+                floorNumber = "1",
+                houseNumber = "A-101",
+                crossStreet = "1st Cross",
+                occupancyType = OccupancyType.SELF_OCCUPIED,
+                approvalStatus = ApprovalStatus.APPROVED
+            ),
+            HouseDetail(
+                id = "house_102",
+                ownerUid = "owner_demo_456",
+                ownerName = "Priya Sharma",
+                ownerPhone = "+919888877777",
+                propertyType = PropertyType.APARTMENT,
+                buildingName = "San Siri Residency",
+                buildingNumber = "Block A",
+                floorNumber = "1",
+                houseNumber = "A-102",
+                crossStreet = "2nd Cross",
+                occupancyType = OccupancyType.RENTED,
+                approvalStatus = ApprovalStatus.APPROVED
+            ),
+            HouseDetail(
+                id = "house_201",
+                ownerUid = "owner_demo_789",
+                ownerName = "Suresh Patel",
+                ownerPhone = "+919777766666",
+                propertyType = PropertyType.APARTMENT,
+                buildingName = "San Siri Residency",
+                buildingNumber = "Block B",
+                floorNumber = "2",
+                houseNumber = "B-201",
+                crossStreet = "3rd Cross",
+                occupancyType = OccupancyType.SELF_OCCUPIED,
+                approvalStatus = ApprovalStatus.APPROVED
+            ),
+            HouseDetail(
+                id = "house_202",
+                ownerUid = "owner_demo_101",
+                ownerName = "Ramesh V",
+                ownerPhone = "+919666655555",
+                propertyType = PropertyType.APARTMENT,
+                buildingName = "San Siri Residency",
+                buildingNumber = "Block B",
+                floorNumber = "2",
+                houseNumber = "B-202",
+                crossStreet = "4th Cross",
+                occupancyType = OccupancyType.RENTED,
+                approvalStatus = ApprovalStatus.APPROVED
+            ),
+            HouseDetail(
+                id = "house_301",
+                ownerUid = "owner_demo_202",
+                ownerName = "Kavitha Reddy",
+                ownerPhone = "+919555544444",
+                propertyType = PropertyType.APARTMENT,
+                buildingName = "San Siri Residency",
+                buildingNumber = "Block C",
+                floorNumber = "3",
+                houseNumber = "C-301",
+                crossStreet = "5th Cross",
+                occupancyType = OccupancyType.SELF_OCCUPIED,
+                approvalStatus = ApprovalStatus.APPROVED
+            ),
+            HouseDetail(
+                id = "house_302",
+                ownerUid = "owner_demo_302",
+                ownerName = "Rajesh Rao",
+                ownerPhone = "+919444433333",
+                propertyType = PropertyType.APARTMENT,
+                buildingName = "San Siri Residency",
+                buildingNumber = "Block C",
+                floorNumber = "3",
+                houseNumber = "C-302",
+                crossStreet = "6th Cross",
+                occupancyType = OccupancyType.SELF_OCCUPIED,
+                approvalStatus = ApprovalStatus.APPROVED
+            ),
+            HouseDetail(
+                id = "house_401",
+                ownerUid = "owner_demo_401",
+                ownerName = "Deepak Verma",
+                ownerPhone = "+919333322222",
+                propertyType = PropertyType.APARTMENT,
+                buildingName = "San Siri Residency",
+                buildingNumber = "Block D",
+                floorNumber = "4",
+                houseNumber = "D-401",
+                crossStreet = "7th Cross",
+                occupancyType = OccupancyType.SELF_OCCUPIED,
+                approvalStatus = ApprovalStatus.APPROVED
+            ),
+            HouseDetail(
+                id = "house_402",
+                ownerUid = "owner_demo_402",
+                ownerName = "Sunita Nair",
+                ownerPhone = "+919222211111",
+                propertyType = PropertyType.APARTMENT,
+                buildingName = "San Siri Residency",
+                buildingNumber = "Block D",
+                floorNumber = "4",
+                houseNumber = "D-402",
+                crossStreet = "8th Cross",
+                occupancyType = OccupancyType.RENTED,
+                approvalStatus = ApprovalStatus.APPROVED
+            ),
+            HouseDetail(
+                id = "house_501",
+                ownerUid = "owner_demo_501",
+                ownerName = "Vikram Singh",
+                ownerPhone = "+919111100000",
+                propertyType = PropertyType.APARTMENT,
+                buildingName = "San Siri Residency",
+                buildingNumber = "Block E",
+                floorNumber = "5",
+                houseNumber = "E-501",
+                crossStreet = "9th Cross",
+                occupancyType = OccupancyType.SELF_OCCUPIED,
+                approvalStatus = ApprovalStatus.APPROVED
+            ),
+            HouseDetail(
+                id = "house_502",
+                ownerUid = "owner_demo_502",
+                ownerName = "Meena Joshi",
+                ownerPhone = "+919000099999",
+                propertyType = PropertyType.APARTMENT,
+                buildingName = "San Siri Residency",
+                buildingNumber = "Block E",
+                floorNumber = "5",
+                houseNumber = "E-502",
+                crossStreet = "10th Cross",
+                occupancyType = OccupancyType.RENTED,
+                approvalStatus = ApprovalStatus.APPROVED
+            )
+        )
     }
 }

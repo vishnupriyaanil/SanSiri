@@ -167,6 +167,20 @@ fun PeoplesDirectoryScreen(
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
+
+            Surface(
+                color = Color(0xFF006A60).copy(alpha = 0.12f),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(1.dp, Color(0xFF006A60).copy(alpha = 0.3f))
+            ) {
+                Text(
+                    text = "Total Residents: ${filteredHouses.size}",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF006A60),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                )
+            }
         }
 
         // Search bar & Filter Icon Button
@@ -249,7 +263,9 @@ fun PeoplesDirectoryScreen(
         }
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .weight(1f),
             contentPadding = PaddingValues(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {

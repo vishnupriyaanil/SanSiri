@@ -400,10 +400,16 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
 
         private fun initialDemoCrossReps(): Map<String, String> {
             return mapOf(
-                "1st Cross" to "owner_demo_789",
+                "1st Cross" to "owner_demo_123",
                 "2nd Cross" to "owner_demo_456",
-                "3rd Cross" to "owner_demo_123",
-                "4th Cross" to "owner_demo_101"
+                "3rd Cross" to "owner_demo_789",
+                "4th Cross" to "owner_demo_101",
+                "5th Cross" to "owner_demo_202",
+                "6th Cross" to "owner_demo_302",
+                "7th Cross" to "owner_demo_401",
+                "8th Cross" to "owner_demo_402",
+                "9th Cross" to "owner_demo_501",
+                "10th Cross" to "owner_demo_502"
             )
         }
 
@@ -483,6 +489,36 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
                     phoneNumber = "+919555544444",
                     name = "Kavitha Reddy",
                     role = UserRole.USER
+                ),
+                User(
+                    uid = "owner_demo_302",
+                    phoneNumber = "+919444433333",
+                    name = "Rajesh Rao",
+                    role = UserRole.USER
+                ),
+                User(
+                    uid = "owner_demo_401",
+                    phoneNumber = "+919333322222",
+                    name = "Deepak Verma",
+                    role = UserRole.USER
+                ),
+                User(
+                    uid = "owner_demo_402",
+                    phoneNumber = "+919222211111",
+                    name = "Sunita Nair",
+                    role = UserRole.USER
+                ),
+                User(
+                    uid = "owner_demo_501",
+                    phoneNumber = "+919111100000",
+                    name = "Vikram Singh",
+                    role = UserRole.USER
+                ),
+                User(
+                    uid = "owner_demo_502",
+                    phoneNumber = "+919000099999",
+                    name = "Meena Joshi",
+                    role = UserRole.USER
                 )
             )
         }
@@ -499,7 +535,7 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
                     buildingNumber = "Block A",
                     floorNumber = "1",
                     houseNumber = "A-101",
-                    crossStreet = "3rd Main, 4th Cross",
+                    crossStreet = "1st Cross",
                     occupancyType = OccupancyType.SELF_OCCUPIED,
                     approvalStatus = ApprovalStatus.APPROVED
                 ),
@@ -527,7 +563,7 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
                     buildingNumber = "Block B",
                     floorNumber = "2",
                     houseNumber = "B-201",
-                    crossStreet = "1st Main",
+                    crossStreet = "3rd Cross",
                     occupancyType = OccupancyType.SELF_OCCUPIED,
                     approvalStatus = ApprovalStatus.APPROVED
                 ),
@@ -555,7 +591,7 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
                     buildingNumber = "Block C",
                     floorNumber = "3",
                     houseNumber = "C-301",
-                    crossStreet = "2nd Main",
+                    crossStreet = "5th Cross",
                     occupancyType = OccupancyType.SELF_OCCUPIED,
                     approvalStatus = ApprovalStatus.APPROVED
                 ),
@@ -569,8 +605,64 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
                     buildingNumber = "Block C",
                     floorNumber = "3",
                     houseNumber = "C-302",
-                    crossStreet = "2nd Main",
+                    crossStreet = "6th Cross",
                     occupancyType = OccupancyType.SELF_OCCUPIED,
+                    approvalStatus = ApprovalStatus.APPROVED
+                ),
+                HouseDetail(
+                    id = "house_401",
+                    ownerUid = "owner_demo_401",
+                    ownerName = "Deepak Verma",
+                    ownerPhone = "+919333322222",
+                    propertyType = PropertyType.APARTMENT,
+                    buildingName = "San Siri Residency",
+                    buildingNumber = "Block D",
+                    floorNumber = "4",
+                    houseNumber = "D-401",
+                    crossStreet = "7th Cross",
+                    occupancyType = OccupancyType.SELF_OCCUPIED,
+                    approvalStatus = ApprovalStatus.APPROVED
+                ),
+                HouseDetail(
+                    id = "house_402",
+                    ownerUid = "owner_demo_402",
+                    ownerName = "Sunita Nair",
+                    ownerPhone = "+919222211111",
+                    propertyType = PropertyType.APARTMENT,
+                    buildingName = "San Siri Residency",
+                    buildingNumber = "Block D",
+                    floorNumber = "4",
+                    houseNumber = "D-402",
+                    crossStreet = "8th Cross",
+                    occupancyType = OccupancyType.RENTED,
+                    approvalStatus = ApprovalStatus.APPROVED
+                ),
+                HouseDetail(
+                    id = "house_501",
+                    ownerUid = "owner_demo_501",
+                    ownerName = "Vikram Singh",
+                    ownerPhone = "+919111100000",
+                    propertyType = PropertyType.APARTMENT,
+                    buildingName = "San Siri Residency",
+                    buildingNumber = "Block E",
+                    floorNumber = "5",
+                    houseNumber = "E-501",
+                    crossStreet = "9th Cross",
+                    occupancyType = OccupancyType.SELF_OCCUPIED,
+                    approvalStatus = ApprovalStatus.APPROVED
+                ),
+                HouseDetail(
+                    id = "house_502",
+                    ownerUid = "owner_demo_502",
+                    ownerName = "Meena Joshi",
+                    ownerPhone = "+919000099999",
+                    propertyType = PropertyType.APARTMENT,
+                    buildingName = "San Siri Residency",
+                    buildingNumber = "Block E",
+                    floorNumber = "5",
+                    houseNumber = "E-502",
+                    crossStreet = "10th Cross",
+                    occupancyType = OccupancyType.RENTED,
                     approvalStatus = ApprovalStatus.APPROVED
                 )
             )
