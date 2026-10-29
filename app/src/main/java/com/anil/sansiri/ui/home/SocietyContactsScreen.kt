@@ -156,12 +156,12 @@ fun SocietyContactsScreen(
         if (isAdmin) {
             FloatingActionButton(
                 onClick = { showAddDialog = true },
+                shape = CircleShape,
                 containerColor = Color(0xFF006A60),
                 contentColor = Color.White,
-                shape = CircleShape,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(20.dp)
+                    .padding(16.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Contact")
             }

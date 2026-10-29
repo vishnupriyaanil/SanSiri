@@ -104,6 +104,7 @@ interface SanSiriRepository {
         propertyType: PropertyType = PropertyType.INDIVIDUAL_HOUSE
     ): Result<HouseDetail>
     fun getApprovedHouses(): Flow<List<HouseDetail>>
+    fun getHouseDetails(): Flow<List<HouseDetail>> = getApprovedHouses()
     fun getPendingHouses(): Flow<List<HouseDetail>>
     fun getAllHouses(): Flow<List<HouseDetail>>
     suspend fun updateHouseStatus(houseId: String, status: ApprovalStatus): Result<Unit>

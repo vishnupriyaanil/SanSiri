@@ -21,9 +21,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Close
@@ -42,6 +44,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -67,6 +70,7 @@ import com.anil.sansiri.data.model.HouseDetail
 import com.anil.sansiri.data.model.OccupancyType
 import com.anil.sansiri.data.model.User
 import com.anil.sansiri.data.model.UserRole
+import com.anil.sansiri.ui.admin.AddNewUserDialog
 import com.anil.sansiri.ui.admin.EditUserAndBuildingDetailsDialog
 
 @Composable
@@ -87,6 +91,7 @@ fun PeoplesDirectoryScreen(
     var representativesOnly by remember { mutableStateOf(false) }
     var sortByCross by remember { mutableStateOf(true) } // true: Sort by Cross, false: Sort by Name (A-Z)
     var showFilterDialog by remember { mutableStateOf(false) }
+    var showAddUserDialog by remember { mutableStateOf(false) }
 
     val isFiltered = selectedCrossFilter != "All Crosses" || representativesOnly || !sortByCross
 
@@ -146,48 +151,51 @@ fun PeoplesDirectoryScreen(
         }
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // Header Row with Counter Badge
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+    Box(modifier = modifier.fillMaxSize()) box@ {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Groups,
-                    contentDescription = "Peoples Directory",
-                    tint = Color(0xFF006A60),
-                    modifier = Modifier.size(28.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Peoples Directory",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            Surface(
-                color = Color(0xFF006A60).copy(alpha = 0.12f),
-                shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(1.dp, Color(0xFF006A60).copy(alpha = 0.3f))
+            // Header Row with Counter Badge
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Total Residents: ${filteredHouses.size}",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF006A60),
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Groups,
+                        contentDescription = "Peoples Directory",
+                        tint = Color(0xFF006A60),
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Text(
+                        text = "Peoples Directory",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Surface(
+                    color = Color(0xFF006A60).copy(alpha = 0.12f),
+                    shape = CircleShape,
+                    border = BorderStroke(1.dp, Color(0xFF006A60).copy(alpha = 0.3f))
+                ) {
+                    Text(
+                        text = "Total Residents: ${filteredHouses.size}",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF006A60),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                    )
+                }
             }
-        }
 
         // Search bar & Filter Icon Button with Marquee
         Row(
@@ -422,7 +430,24 @@ fun PeoplesDirectoryScreen(
                     }
                 }
             }
+        } // Closes LazyColumn
+
+        if (isAdmin) {
+            FloatingActionButton(
+                onClick = { showAddUserDialog = true },
+                shape = CircleShape,
+                containerColor = Color(0xFF006A60),
+                contentColor = Color.White,
+                modifier = this@box.run { Modifier.align(Alignment.BottomEnd) }
+                    .padding(16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Resident"
+                )
+            }
         }
+    } // Closes Box
     }
 
     // Assign Cross Representative Dialog for Admins & Super Admins
@@ -460,6 +485,25 @@ fun PeoplesDirectoryScreen(
                 userAndHouseToEdit = null
             },
             onDismiss = { userAndHouseToEdit = null }
+        )
+    }
+
+    if (showAddUserDialog) {
+        AddNewUserDialog(
+            isSuperAdmin = currentUser?.role == UserRole.SUPER_ADMIN,
+            onAddUser = { name, phone, flatNumber, crossStreet, occupancyType, selectedRole ->
+                val targetUid = "user_dir_${System.currentTimeMillis()}"
+                onUpdateUserRoleAndDetails?.invoke(
+                    targetUid,
+                    name,
+                    flatNumber,
+                    crossStreet,
+                    occupancyType,
+                    selectedRole
+                )
+                showAddUserDialog = false
+            },
+            onDismiss = { showAddUserDialog = false }
         )
     }
 }

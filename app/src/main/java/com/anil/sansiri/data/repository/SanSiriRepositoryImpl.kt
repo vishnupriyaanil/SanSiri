@@ -463,61 +463,61 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
                 User(
                     uid = "owner_demo_123",
                     phoneNumber = "+919123456789",
-                    name = "Anil Kumar",
+                    name = "Ramesh Kumar",
                     role = UserRole.USER
                 ),
                 User(
                     uid = "owner_demo_456",
                     phoneNumber = "+919888877777",
-                    name = "Priya Sharma",
+                    name = "Suresh Patel",
                     role = UserRole.USER
                 ),
                 User(
                     uid = "owner_demo_789",
                     phoneNumber = "+919777766666",
-                    name = "Suresh Patel",
+                    name = "Anil Verma",
                     role = UserRole.USER
                 ),
                 User(
                     uid = "owner_demo_101",
                     phoneNumber = "+919666655555",
-                    name = "Ramesh V",
+                    name = "Priya Sharma",
                     role = UserRole.USER
                 ),
                 User(
                     uid = "owner_demo_202",
                     phoneNumber = "+919555544444",
-                    name = "Kavitha Reddy",
+                    name = "Vijay Reddy",
                     role = UserRole.USER
                 ),
                 User(
                     uid = "owner_demo_302",
                     phoneNumber = "+919444433333",
-                    name = "Rajesh Rao",
+                    name = "Kavitha Nair",
                     role = UserRole.USER
                 ),
                 User(
                     uid = "owner_demo_401",
                     phoneNumber = "+919333322222",
-                    name = "Deepak Verma",
+                    name = "Rajesh Gupta",
                     role = UserRole.USER
                 ),
                 User(
                     uid = "owner_demo_402",
                     phoneNumber = "+919222211111",
-                    name = "Sunita Nair",
+                    name = "Deepa Singh",
                     role = UserRole.USER
                 ),
                 User(
                     uid = "owner_demo_501",
                     phoneNumber = "+919111100000",
-                    name = "Vikram Singh",
+                    name = "Manjunath Rao",
                     role = UserRole.USER
                 ),
                 User(
                     uid = "owner_demo_502",
                     phoneNumber = "+919000099999",
-                    name = "Meena Joshi",
+                    name = "Sunita Joshi",
                     role = UserRole.USER
                 ),
                 User(uid = "owner_demo_101_extra", phoneNumber = "+919811111111", name = "Arun Hegde", role = UserRole.USER),
@@ -538,7 +538,7 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
                 HouseDetail(
                     id = "house_101",
                     ownerUid = "owner_demo_123",
-                    ownerName = "Anil Kumar",
+                    ownerName = "Ramesh Kumar",
                     ownerPhone = "+919123456789",
                     propertyType = PropertyType.APARTMENT,
                     buildingName = "San Siri Residency",
@@ -552,7 +552,7 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
                 HouseDetail(
                     id = "house_102",
                     ownerUid = "owner_demo_456",
-                    ownerName = "Priya Sharma",
+                    ownerName = "Suresh Patel",
                     ownerPhone = "+919888877777",
                     propertyType = PropertyType.APARTMENT,
                     buildingName = "San Siri Residency",
@@ -566,7 +566,7 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
                 HouseDetail(
                     id = "house_201",
                     ownerUid = "owner_demo_789",
-                    ownerName = "Suresh Patel",
+                    ownerName = "Anil Verma",
                     ownerPhone = "+919777766666",
                     propertyType = PropertyType.APARTMENT,
                     buildingName = "San Siri Residency",
@@ -580,7 +580,7 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
                 HouseDetail(
                     id = "house_202",
                     ownerUid = "owner_demo_101",
-                    ownerName = "Ramesh V",
+                    ownerName = "Priya Sharma",
                     ownerPhone = "+919666655555",
                     propertyType = PropertyType.APARTMENT,
                     buildingName = "San Siri Residency",
@@ -594,7 +594,7 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
                 HouseDetail(
                     id = "house_301",
                     ownerUid = "owner_demo_202",
-                    ownerName = "Kavitha Reddy",
+                    ownerName = "Vijay Reddy",
                     ownerPhone = "+919555544444",
                     propertyType = PropertyType.APARTMENT,
                     buildingName = "San Siri Residency",
@@ -608,7 +608,7 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
                 HouseDetail(
                     id = "house_302",
                     ownerUid = "owner_demo_302",
-                    ownerName = "Rajesh Rao",
+                    ownerName = "Kavitha Nair",
                     ownerPhone = "+919444433333",
                     propertyType = PropertyType.APARTMENT,
                     buildingName = "San Siri Residency",
@@ -622,7 +622,7 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
                 HouseDetail(
                     id = "house_401",
                     ownerUid = "owner_demo_401",
-                    ownerName = "Deepak Verma",
+                    ownerName = "Rajesh Gupta",
                     ownerPhone = "+919333322222",
                     propertyType = PropertyType.APARTMENT,
                     buildingName = "San Siri Residency",
@@ -636,7 +636,7 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
                 HouseDetail(
                     id = "house_402",
                     ownerUid = "owner_demo_402",
-                    ownerName = "Sunita Nair",
+                    ownerName = "Deepa Singh",
                     ownerPhone = "+919222211111",
                     propertyType = PropertyType.APARTMENT,
                     buildingName = "San Siri Residency",
@@ -650,7 +650,7 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
                 HouseDetail(
                     id = "house_501",
                     ownerUid = "owner_demo_501",
-                    ownerName = "Vikram Singh",
+                    ownerName = "Manjunath Rao",
                     ownerPhone = "+919111100000",
                     propertyType = PropertyType.APARTMENT,
                     buildingName = "San Siri Residency",
@@ -664,7 +664,7 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
                 HouseDetail(
                     id = "house_502",
                     ownerUid = "owner_demo_502",
-                    ownerName = "Meena Joshi",
+                    ownerName = "Sunita Joshi",
                     ownerPhone = "+919000099999",
                     propertyType = PropertyType.APARTMENT,
                     buildingName = "San Siri Residency",
@@ -1482,6 +1482,8 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
     override fun getApprovedHouses(): Flow<List<HouseDetail>> {
         return housesFlow.map { list -> list.filter { it.approvalStatus == ApprovalStatus.APPROVED } }
     }
+
+    override fun getHouseDetails(): Flow<List<HouseDetail>> = getApprovedHouses()
 
     override fun getPendingHouses(): Flow<List<HouseDetail>> {
         return housesFlow.map { list -> list.filter { it.approvalStatus == ApprovalStatus.PENDING } }
