@@ -43,6 +43,8 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Person
@@ -398,53 +400,75 @@ private fun FourMonthsStatusView(
                             }
 
                             val isExpanded = expandedCrosses[cross] != false
+                            val totalResidents = sortedResidents.size
+                            val paidCount = sortedResidents.count { it.isPaid || it.paymentStatus == PaymentStatus.APPROVED }
 
                             item(key = "cross_section_$cross") {
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(vertical = 4.dp),
+                                        .padding(vertical = 6.dp),
                                     shape = RoundedCornerShape(16.dp),
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                                    border = BorderStroke(1.dp, Color(0xFF00695C).copy(alpha = 0.2f))
                                 ) {
                                     Column(modifier = Modifier.fillMaxWidth()) {
+                                        // Deep Teal Header Bar
                                         Row(
                                             modifier = Modifier
                                                 .fillMaxWidth()
+                                                .background(Color(0xFF00695C))
                                                 .clickable { expandedCrosses[cross] = !isExpanded }
-                                                .padding(16.dp),
+                                                .padding(horizontal = 16.dp, vertical = 14.dp),
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            ) {
                                                 Surface(
-                                                    color = MaterialTheme.colorScheme.primary,
+                                                    color = Color.White.copy(alpha = 0.15f),
                                                     shape = CircleShape,
-                                                    modifier = Modifier.size(32.dp)
+                                                    modifier = Modifier.size(36.dp)
                                                 ) {
                                                     Box(contentAlignment = Alignment.Center) {
                                                         Icon(
                                                             imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
                                                             contentDescription = null,
                                                             tint = Color.White,
-                                                            modifier = Modifier.size(16.dp)
+                                                            modifier = Modifier.size(18.dp)
                                                         )
                                                     }
                                                 }
-                                                Spacer(modifier = Modifier.width(12.dp))
-                                                Text(
-                                                    text = "$cross (${sortedResidents.size} Residents)",
-                                                    style = MaterialTheme.typography.titleMedium,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.primary
-                                                )
+                                                Column {
+                                                    Text(
+                                                        text = cross,
+                                                        style = MaterialTheme.typography.titleMedium,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color.White
+                                                    )
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Surface(
+                                                        color = Color.White.copy(alpha = 0.2f),
+                                                        shape = RoundedCornerShape(12.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = "$totalResidents Residents • $paidCount Paid",
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            fontWeight = FontWeight.SemiBold,
+                                                            color = Color.White,
+                                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                                        )
+                                                    }
+                                                }
                                             }
 
                                             Icon(
-                                                imageVector = Icons.Default.ArrowDropDown,
+                                                imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                                                 contentDescription = if (isExpanded) "Collapse" else "Expand",
-                                                tint = MaterialTheme.colorScheme.primary,
+                                                tint = Color.White,
                                                 modifier = Modifier.size(24.dp)
                                             )
                                         }
@@ -457,8 +481,8 @@ private fun FourMonthsStatusView(
                                             Column(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
-                                                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                                    .padding(12.dp),
+                                                verticalArrangement = Arrangement.spacedBy(10.dp)
                                             ) {
                                                 sortedResidents.forEach { item ->
                                                     MonthlyPaymentCard(
@@ -469,7 +493,6 @@ private fun FourMonthsStatusView(
                                                         }
                                                     )
                                                 }
-                                                Spacer(modifier = Modifier.height(4.dp))
                                             }
                                         }
                                     }
@@ -494,238 +517,219 @@ private fun MonthlyPaymentCard(
     val isPaid = item.isPaid || item.paymentStatus == PaymentStatus.APPROVED
     val isPending = !isPaid && (!item.transactionRef.isNullOrBlank() || item.paymentStatus == PaymentStatus.PENDING)
 
-    val backgroundColor = when {
-        isPaid -> Color(0xFFE8F5E9)      // Soft Green
-        isPending -> Color(0xFFFFF8E1)   // Soft Amber
-        else -> Color(0xFFFFEBEE)        // Soft Red
-    }
-
-    val textColor = when {
-        isPaid -> Color(0xFF2E7D32)
-        isPending -> Color(0xFFB78103)
-        else -> Color(0xFFC62828)
-    }
-
-    val borderColor = when {
-        isPaid -> Color(0xFFA5D6A7)
-        isPending -> Color(0xFFFFE082)
-        else -> Color(0xFFEF9A9A)
-    }
-
-    val badgeText = when {
-        isPaid -> "PAID / APPROVED"
-        isPending -> "PENDING APPROVAL"
-        else -> "UNPAID"
-    }
-
-    val badgeBgColor = when {
-        isPaid -> Color(0xFF2E7D32)
-        isPending -> Color(0xFFF57F17)
-        else -> Color(0xFFC62828)
-    }
-
-    val statusIcon = when {
-        isPaid -> Icons.Default.CheckCircle
-        isPending -> Icons.Default.Schedule
-        else -> Icons.Default.Error
+    val (statusText, statusBg, statusContentColor, statusIcon) = when {
+        isPaid -> Quad(
+            "PAID",
+            Color(0xFFD1FAE5),
+            Color(0xFF047857),
+            Icons.Default.CheckCircle
+        )
+        isPending -> Quad(
+            "PENDING APPROVAL",
+            Color(0xFFFEF3C7),
+            Color(0xFFB45309),
+            Icons.Default.Schedule
+        )
+        else -> Quad(
+            "UNPAID",
+            Color(0xFFFEE2E2),
+            Color(0xFFB91C1C),
+            Icons.Default.Error
+        )
     }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, borderColor, RoundedCornerShape(16.dp))
+            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(16.dp))
             .clickable { expanded = !expanded },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp)
         ) {
-            // High-contrast left accent bar
-            Box(
-                modifier = Modifier
-                    .width(6.dp)
-                    .fillMaxHeight()
-                    .background(badgeBgColor)
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .background(
-                                    color = when {
-                                        isPaid -> Color(0xFFC8E6C9)
-                                        isPending -> Color(0xFFFFECB3)
-                                        else -> Color(0xFFFFCDD2)
-                                    },
-                                    shape = CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = statusIcon,
-                                contentDescription = null,
-                                tint = textColor,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Column {
-                            Text(
-                                text = "Flat ${item.houseNumber}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = textColor
-                            )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = textColor,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = item.ownerName.ifBlank { "Resident" },
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = textColor
-                                )
-                            }
-                            if (isPaid && !item.paymentDate.isNullOrBlank()) {
-                                Text(
-                                    text = "Paid on ${item.paymentDate}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = textColor.copy(alpha = 0.8f)
-                                )
-                            } else if (isPending && !item.transactionRef.isNullOrBlank()) {
-                                Text(
-                                    text = "Ref: ${item.transactionRef}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = textColor.copy(alpha = 0.9f)
-                                )
-                            }
-                        }
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .background(
+                                color = when {
+                                    isPaid -> Color(0xFFE6F4EA)
+                                    isPending -> Color(0xFFFEF3C7)
+                                    else -> Color(0xFFFFEBEE)
+                                },
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = statusIcon,
+                            contentDescription = null,
+                            tint = when {
+                                isPaid -> Color(0xFF10B981)
+                                isPending -> Color(0xFFF59E0B)
+                                else -> Color(0xFFEF4444)
+                            },
+                            modifier = Modifier.size(22.dp)
+                        )
                     }
 
-                    Column(horizontalAlignment = Alignment.End) {
+                    Column {
                         Text(
-                            text = "₹${item.amount.toInt()}",
-                            style = MaterialTheme.typography.titleLarge,
+                            text = "Flat ${item.houseNumber}",
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = textColor
+                            color = Color(0xFF0F172A)
                         )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Surface(
-                            color = badgeBgColor,
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = Color(0xFF64748B),
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = badgeText,
+                                text = item.ownerName.ifBlank { "Resident" },
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF475569)
+                            )
+                        }
+                        if (isPaid && !item.paymentDate.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Paid on ${item.paymentDate}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color(0xFF059669)
+                            )
+                        } else if (isPending && !item.transactionRef.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Ref: ${item.transactionRef}",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                color = Color(0xFFB45309)
                             )
                         }
                     }
                 }
 
-                if (isPending && isAdmin && onApprove != null) {
-                    Spacer(modifier = Modifier.height(10.dp))
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "₹${item.amount.toInt()}",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0F172A)
+                    )
+
+                    Surface(
+                        color = statusBg,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = statusText,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = statusContentColor,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            }
+
+            if (isPending && isAdmin && onApprove != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(
+                        onClick = onApprove,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF00695C),
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.height(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Approve",
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Approve",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            AnimatedVisibility(
+                visible = expanded,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp)
+                ) {
+                    HorizontalDivider(color = Color(0xFFE2E8F0))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Button(
-                            onClick = onApprove,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF2E7D32),
-                                contentColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.height(38.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Approve",
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "Approve",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        Text(
+                            text = "Billing Month:",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF64748B)
+                        )
+                        Text(
+                            text = item.monthYear,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF0F172A)
+                        )
                     }
-                }
-
-                AnimatedVisibility(
-                    visible = expanded,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 12.dp)
-                    ) {
-                        HorizontalDivider(color = borderColor.copy(alpha = 0.5f))
-                        Spacer(modifier = Modifier.height(8.dp))
+                    if (!item.transactionRef.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Billing Month:",
+                                text = "Transaction Ref:",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = textColor
+                                color = Color(0xFF64748B)
                             )
                             Text(
-                                text = item.monthYear,
+                                text = item.transactionRef,
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Bold,
-                                color = textColor
+                                color = Color(0xFF0F172A)
                             )
-                        }
-                        if (!item.transactionRef.isNullOrBlank()) {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "Transaction Ref:",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = textColor
-                                )
-                                Text(
-                                    text = item.transactionRef,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = textColor
-                                )
-                            }
                         }
                     }
                 }
@@ -733,6 +737,8 @@ private fun MonthlyPaymentCard(
         }
     }
 }
+
+data class Quad<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
 
 @Composable
 private fun PayMaintenanceSection(
