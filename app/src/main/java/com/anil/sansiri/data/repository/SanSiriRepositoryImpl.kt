@@ -284,10 +284,21 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
             }
         }
 
+        db.collection("house_details").addSnapshotListener { snapshot, _ ->
+            if (snapshot != null && !snapshot.isEmpty) {
+                val list = snapshot.documents.mapNotNull { doc -> doc.toObject(HouseDetail::class.java) }
+                if (list.isNotEmpty()) {
+                    housesFlow.value = list
+                }
+            }
+        }
+
         db.collection("houses").addSnapshotListener { snapshot, _ ->
             if (snapshot != null && !snapshot.isEmpty) {
                 val list = snapshot.documents.mapNotNull { doc -> doc.toObject(HouseDetail::class.java) }
-                housesFlow.value = list
+                if (list.isNotEmpty() || housesFlow.value.isEmpty()) {
+                    housesFlow.value = list
+                }
             }
         }
 
@@ -354,18 +365,40 @@ class SanSiriRepositoryImpl private constructor(private val context: Context) : 
                     }
                 }
 
-                db.collection("users").get().addOnSuccessListener { snapshot ->
-                    if (snapshot == null || snapshot.isEmpty) {
-                        for (user in usersFlow.value) {
-                            db.collection("users").document(user.uid).set(user)
+                db.collection("house_details").get().addOnSuccessListener { snapshot ->
+                    if (snapshot == null || snapshot.size() < 50) {
+                        val (users, houses) = generate10UsersAndHouses()
+                        val batch = db.batch()
+                        users.forEach { user ->
+                            batch.set(db.collection("users").document(user.uid), user)
                         }
+                        houses.forEach { house ->
+                            batch.set(db.collection("house_details").document(house.id), house)
+                            batch.set(db.collection("houses").document(house.id), house)
+                        }
+                        batch.commit()
                     }
                 }
 
                 db.collection("houses").get().addOnSuccessListener { snapshot ->
+                    if (snapshot == null || snapshot.size() < 50) {
+                        val (users, houses) = generate10UsersAndHouses()
+                        val batch = db.batch()
+                        users.forEach { user ->
+                            batch.set(db.collection("users").document(user.uid), user)
+                        }
+                        houses.forEach { house ->
+                            batch.set(db.collection("house_details").document(house.id), house)
+                            batch.set(db.collection("houses").document(house.id), house)
+                        }
+                        batch.commit()
+                    }
+                }
+
+                db.collection("users").get().addOnSuccessListener { snapshot ->
                     if (snapshot == null || snapshot.isEmpty) {
-                        for (house in housesFlow.value) {
-                            db.collection("houses").document(house.id).set(house)
+                        for (user in usersFlow.value) {
+                            db.collection("users").document(user.uid).set(user)
                         }
                     }
                 }

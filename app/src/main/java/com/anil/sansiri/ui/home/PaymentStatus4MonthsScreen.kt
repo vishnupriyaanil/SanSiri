@@ -25,6 +25,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.TextButton
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -216,38 +217,15 @@ private fun FourMonthsStatusView(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Gradient header banner on the Payments tab (#006A60 to #004D40)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = androidx.compose.ui.graphics.Brush.linearGradient(
-                        colors = listOf(Color(0xFF006A60), Color(0xFF004D40))
-                    )
-                )
-                .padding(20.dp)
-        ) {
-            Column {
-                Text(
-                    text = "San Siri Payments & Dues",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Track multi-cross resident payment status across all 10 crosses",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.85f)
-                )
-            }
-        }
-
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF1F5F9))
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -569,7 +547,7 @@ private fun MonthlyPaymentCard(
             Box(
                 modifier = Modifier
                     .width(6.dp)
-                    .height(110.dp)
+                    .fillMaxHeight()
                     .background(badgeBgColor)
             )
 

@@ -349,7 +349,7 @@ fun MainDashboard(
                     title = {
                         Column {
                             Text(
-                                text = "San Siri Residency",
+                                text = if (uiState.selectedNavRoute == NavRouteItem.Payments.route) "Maintenance" else "San Siri Residency",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
