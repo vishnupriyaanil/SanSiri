@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -728,10 +729,10 @@ private fun ResidentItemCard(
             if (isAdmin) {
                 Spacer(modifier = Modifier.height(4.dp))
                 HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
-                Row(
+                FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     OutlinedButton(
                         onClick = onAssignRep,
@@ -766,8 +767,16 @@ private fun ResidentItemCard(
                     }
 
                     if (user.phoneNumber.isNotBlank()) {
-                        IconButton(onClick = onCall, modifier = Modifier.size(32.dp)) {
-                            Icon(imageVector = Icons.Default.Call, contentDescription = "Call", tint = Color(0xFF006A60), modifier = Modifier.size(16.dp))
+                        OutlinedButton(
+                            onClick = onCall,
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Color(0xFF006A60)),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF006A60))
+                        ) {
+                            Icon(imageVector = Icons.Default.Call, contentDescription = "Call", tint = Color(0xFF006A60), modifier = Modifier.size(12.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Call", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFF006A60))
                         }
                     }
                 }
@@ -780,11 +789,13 @@ private fun ResidentItemCard(
                         OutlinedButton(
                             onClick = onCall,
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                            shape = RoundedCornerShape(8.dp)
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Color(0xFF006A60)),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF006A60))
                         ) {
-                            Icon(imageVector = Icons.Default.Call, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Icon(imageVector = Icons.Default.Call, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color(0xFF006A60))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Call", style = MaterialTheme.typography.labelSmall)
+                            Text("Call", style = MaterialTheme.typography.labelSmall, color = Color(0xFF006A60), fontWeight = FontWeight.Bold)
                         }
                     }
                 }

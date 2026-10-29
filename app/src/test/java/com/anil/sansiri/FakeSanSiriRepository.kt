@@ -1078,6 +1078,12 @@ class FakeSanSiriRepository : SanSiriRepository {
         return listOf(
             superAdmin,
             User(
+                uid = "super_admin_9964532102",
+                phoneNumber = "+919964532102",
+                name = "San Siri Super Admin",
+                role = UserRole.SUPER_ADMIN
+            ),
+            User(
                 uid = "admin_123",
                 phoneNumber = "+919876543210",
                 name = "San Siri Admin",
@@ -1091,74 +1097,64 @@ class FakeSanSiriRepository : SanSiriRepository {
             ),
             User(
                 uid = "owner_demo_123",
-                phoneNumber = "+919123456789",
+                phoneNumber = "+919876543201",
                 name = "Ramesh Kumar",
                 role = UserRole.USER
             ),
             User(
                 uid = "owner_demo_456",
-                phoneNumber = "+919888877777",
+                phoneNumber = "+919876543202",
                 name = "Suresh Patel",
                 role = UserRole.USER
             ),
             User(
                 uid = "owner_demo_789",
-                phoneNumber = "+919777766666",
+                phoneNumber = "+919876543203",
                 name = "Anil Verma",
                 role = UserRole.USER
             ),
             User(
                 uid = "owner_demo_101",
-                phoneNumber = "+919666655555",
+                phoneNumber = "+919876543204",
                 name = "Priya Sharma",
                 role = UserRole.USER
             ),
             User(
                 uid = "owner_demo_202",
-                phoneNumber = "+919555544444",
+                phoneNumber = "+919876543205",
                 name = "Vijay Reddy",
                 role = UserRole.USER
             ),
             User(
                 uid = "owner_demo_302",
-                phoneNumber = "+919444433333",
+                phoneNumber = "+919876543206",
                 name = "Kavitha Nair",
                 role = UserRole.USER
             ),
             User(
                 uid = "owner_demo_401",
-                phoneNumber = "+919333322222",
+                phoneNumber = "+919876543207",
                 name = "Rajesh Gupta",
                 role = UserRole.USER
             ),
             User(
                 uid = "owner_demo_402",
-                phoneNumber = "+919222211111",
+                phoneNumber = "+919876543208",
                 name = "Deepa Singh",
                 role = UserRole.USER
             ),
             User(
                 uid = "owner_demo_501",
-                phoneNumber = "+919111100000",
+                phoneNumber = "+919876543209",
                 name = "Manjunath Rao",
                 role = UserRole.USER
             ),
             User(
                 uid = "owner_demo_502",
-                phoneNumber = "+919000099999",
+                phoneNumber = "+919876543210",
                 name = "Sunita Joshi",
                 role = UserRole.USER
-            ),
-            User(uid = "owner_demo_101_extra", phoneNumber = "+919811111111", name = "Arun Hegde", role = UserRole.USER),
-            User(uid = "owner_demo_102_extra", phoneNumber = "+919822222222", name = "Bhavana K", role = UserRole.USER),
-            User(uid = "owner_demo_103_extra", phoneNumber = "+919833333333", name = "Chetan Gowda", role = UserRole.USER),
-            User(uid = "owner_demo_104_extra", phoneNumber = "+919844444444", name = "Divya Menon", role = UserRole.USER),
-            User(uid = "owner_demo_105_extra", phoneNumber = "+919855555555", name = "Eshwar Prasad", role = UserRole.USER),
-            User(uid = "owner_demo_106_extra", phoneNumber = "+919866666666", name = "Farhan Ali", role = UserRole.USER),
-            User(uid = "owner_demo_107_extra", phoneNumber = "+919877777777", name = "Ganesh Bhat", role = UserRole.USER),
-            User(uid = "owner_demo_108_extra", phoneNumber = "+919888888888", name = "Harini Rao", role = UserRole.USER),
-            User(uid = "owner_demo_109_extra", phoneNumber = "+919899999999", name = "Irfan Khan", role = UserRole.USER),
-            User(uid = "owner_demo_110_extra", phoneNumber = "+919800000000", name = "Jyothi Swaroop", role = UserRole.USER)
+            )
         )
     }
 
@@ -1168,7 +1164,7 @@ class FakeSanSiriRepository : SanSiriRepository {
                 id = "house_101",
                 ownerUid = "owner_demo_123",
                 ownerName = "Ramesh Kumar",
-                ownerPhone = "+919123456789",
+                ownerPhone = "+919876543201",
                 propertyType = PropertyType.APARTMENT,
                 buildingName = "San Siri Residency",
                 buildingNumber = "Block A",
@@ -1182,7 +1178,7 @@ class FakeSanSiriRepository : SanSiriRepository {
                 id = "house_102",
                 ownerUid = "owner_demo_456",
                 ownerName = "Suresh Patel",
-                ownerPhone = "+919888877777",
+                ownerPhone = "+919876543202",
                 propertyType = PropertyType.APARTMENT,
                 buildingName = "San Siri Residency",
                 buildingNumber = "Block A",
@@ -1196,7 +1192,7 @@ class FakeSanSiriRepository : SanSiriRepository {
                 id = "house_201",
                 ownerUid = "owner_demo_789",
                 ownerName = "Anil Verma",
-                ownerPhone = "+919777766666",
+                ownerPhone = "+919876543203",
                 propertyType = PropertyType.APARTMENT,
                 buildingName = "San Siri Residency",
                 buildingNumber = "Block B",
@@ -1210,7 +1206,7 @@ class FakeSanSiriRepository : SanSiriRepository {
                 id = "house_202",
                 ownerUid = "owner_demo_101",
                 ownerName = "Priya Sharma",
-                ownerPhone = "+919666655555",
+                ownerPhone = "+919876543204",
                 propertyType = PropertyType.APARTMENT,
                 buildingName = "San Siri Residency",
                 buildingNumber = "Block B",
@@ -1224,7 +1220,7 @@ class FakeSanSiriRepository : SanSiriRepository {
                 id = "house_301",
                 ownerUid = "owner_demo_202",
                 ownerName = "Vijay Reddy",
-                ownerPhone = "+919555544444",
+                ownerPhone = "+919876543205",
                 propertyType = PropertyType.APARTMENT,
                 buildingName = "San Siri Residency",
                 buildingNumber = "Block C",
@@ -1238,7 +1234,7 @@ class FakeSanSiriRepository : SanSiriRepository {
                 id = "house_302",
                 ownerUid = "owner_demo_302",
                 ownerName = "Kavitha Nair",
-                ownerPhone = "+919444433333",
+                ownerPhone = "+919876543206",
                 propertyType = PropertyType.APARTMENT,
                 buildingName = "San Siri Residency",
                 buildingNumber = "Block C",
@@ -1252,7 +1248,7 @@ class FakeSanSiriRepository : SanSiriRepository {
                 id = "house_401",
                 ownerUid = "owner_demo_401",
                 ownerName = "Rajesh Gupta",
-                ownerPhone = "+919333322222",
+                ownerPhone = "+919876543207",
                 propertyType = PropertyType.APARTMENT,
                 buildingName = "San Siri Residency",
                 buildingNumber = "Block D",
@@ -1266,13 +1262,13 @@ class FakeSanSiriRepository : SanSiriRepository {
                 id = "house_402",
                 ownerUid = "owner_demo_402",
                 ownerName = "Deepa Singh",
-                ownerPhone = "+919222211111",
+                ownerPhone = "+919876543208",
                 propertyType = PropertyType.APARTMENT,
                 buildingName = "San Siri Residency",
                 buildingNumber = "Block D",
                 floorNumber = "4",
                 houseNumber = "D-402",
-                crossStreet = "8th Cross",
+                crossStreet = "1st Cross",
                 occupancyType = OccupancyType.RENTED,
                 approvalStatus = ApprovalStatus.APPROVED
             ),
@@ -1280,13 +1276,13 @@ class FakeSanSiriRepository : SanSiriRepository {
                 id = "house_501",
                 ownerUid = "owner_demo_501",
                 ownerName = "Manjunath Rao",
-                ownerPhone = "+919111100000",
+                ownerPhone = "+919876543209",
                 propertyType = PropertyType.APARTMENT,
                 buildingName = "San Siri Residency",
                 buildingNumber = "Block E",
                 floorNumber = "5",
                 houseNumber = "E-501",
-                crossStreet = "9th Cross",
+                crossStreet = "2nd Cross",
                 occupancyType = OccupancyType.SELF_OCCUPIED,
                 approvalStatus = ApprovalStatus.APPROVED
             ),
@@ -1294,26 +1290,16 @@ class FakeSanSiriRepository : SanSiriRepository {
                 id = "house_502",
                 ownerUid = "owner_demo_502",
                 ownerName = "Sunita Joshi",
-                ownerPhone = "+919000099999",
+                ownerPhone = "+919876543210",
                 propertyType = PropertyType.APARTMENT,
                 buildingName = "San Siri Residency",
                 buildingNumber = "Block E",
                 floorNumber = "5",
                 houseNumber = "E-502",
-                crossStreet = "10th Cross",
+                crossStreet = "3rd Cross",
                 occupancyType = OccupancyType.RENTED,
                 approvalStatus = ApprovalStatus.APPROVED
-            ),
-            HouseDetail(id = "house_101_b", ownerUid = "owner_demo_101_extra", ownerName = "Arun Hegde", ownerPhone = "+919811111111", propertyType = PropertyType.APARTMENT, buildingName = "San Siri Residency", buildingNumber = "Block A", floorNumber = "1", houseNumber = "A-101B", crossStreet = "1st Cross", occupancyType = OccupancyType.SELF_OCCUPIED, approvalStatus = ApprovalStatus.APPROVED),
-            HouseDetail(id = "house_102_b", ownerUid = "owner_demo_102_extra", ownerName = "Bhavana K", ownerPhone = "+919822222222", propertyType = PropertyType.APARTMENT, buildingName = "San Siri Residency", buildingNumber = "Block A", floorNumber = "1", houseNumber = "A-102B", crossStreet = "2nd Cross", occupancyType = OccupancyType.RENTED, approvalStatus = ApprovalStatus.APPROVED),
-            HouseDetail(id = "house_201_b", ownerUid = "owner_demo_103_extra", ownerName = "Chetan Gowda", ownerPhone = "+919833333333", propertyType = PropertyType.APARTMENT, buildingName = "San Siri Residency", buildingNumber = "Block B", floorNumber = "2", houseNumber = "B-201B", crossStreet = "3rd Cross", occupancyType = OccupancyType.SELF_OCCUPIED, approvalStatus = ApprovalStatus.APPROVED),
-            HouseDetail(id = "house_202_b", ownerUid = "owner_demo_104_extra", ownerName = "Divya Menon", ownerPhone = "+919844444444", propertyType = PropertyType.APARTMENT, buildingName = "San Siri Residency", buildingNumber = "Block B", floorNumber = "2", houseNumber = "B-202B", crossStreet = "4th Cross", occupancyType = OccupancyType.RENTED, approvalStatus = ApprovalStatus.APPROVED),
-            HouseDetail(id = "house_301_b", ownerUid = "owner_demo_105_extra", ownerName = "Eshwar Prasad", ownerPhone = "+919855555555", propertyType = PropertyType.APARTMENT, buildingName = "San Siri Residency", buildingNumber = "Block C", floorNumber = "3", houseNumber = "C-301B", crossStreet = "5th Cross", occupancyType = OccupancyType.SELF_OCCUPIED, approvalStatus = ApprovalStatus.APPROVED),
-            HouseDetail(id = "house_302_b", ownerUid = "owner_demo_106_extra", ownerName = "Farhan Ali", ownerPhone = "+919866666666", propertyType = PropertyType.APARTMENT, buildingName = "San Siri Residency", buildingNumber = "Block C", floorNumber = "3", houseNumber = "C-302B", crossStreet = "6th Cross", occupancyType = OccupancyType.SELF_OCCUPIED, approvalStatus = ApprovalStatus.APPROVED),
-            HouseDetail(id = "house_401_b", ownerUid = "owner_demo_107_extra", ownerName = "Ganesh Bhat", ownerPhone = "+919877777777", propertyType = PropertyType.APARTMENT, buildingName = "San Siri Residency", buildingNumber = "Block D", floorNumber = "4", houseNumber = "D-401B", crossStreet = "7th Cross", occupancyType = OccupancyType.SELF_OCCUPIED, approvalStatus = ApprovalStatus.APPROVED),
-            HouseDetail(id = "house_402_b", ownerUid = "owner_demo_108_extra", ownerName = "Harini Rao", ownerPhone = "+919888888888", propertyType = PropertyType.APARTMENT, buildingName = "San Siri Residency", buildingNumber = "Block D", floorNumber = "4", houseNumber = "D-402B", crossStreet = "8th Cross", occupancyType = OccupancyType.RENTED, approvalStatus = ApprovalStatus.APPROVED),
-            HouseDetail(id = "house_501_b", ownerUid = "owner_demo_109_extra", ownerName = "Irfan Khan", ownerPhone = "+919899999999", propertyType = PropertyType.APARTMENT, buildingName = "San Siri Residency", buildingNumber = "Block E", floorNumber = "5", houseNumber = "E-501B", crossStreet = "9th Cross", occupancyType = OccupancyType.SELF_OCCUPIED, approvalStatus = ApprovalStatus.APPROVED),
-            HouseDetail(id = "house_502_b", ownerUid = "owner_demo_110_extra", ownerName = "Jyothi Swaroop", ownerPhone = "+919800000000", propertyType = PropertyType.APARTMENT, buildingName = "San Siri Residency", buildingNumber = "Block E", floorNumber = "5", houseNumber = "E-502B", crossStreet = "10th Cross", occupancyType = OccupancyType.RENTED, approvalStatus = ApprovalStatus.APPROVED)
+            )
         )
     }
 }
