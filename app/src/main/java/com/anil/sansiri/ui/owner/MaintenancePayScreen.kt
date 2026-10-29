@@ -131,7 +131,6 @@ fun MaintenancePayScreen(
         val calculatedFee = uiState.currentCalculatedFee.toInt()
         val houseNum = uiState.houseDetail?.houseNumber ?: uiState.houseNumber
         val occupancy = uiState.houseDetail?.occupancyType ?: uiState.occupancyType
-        val isSelfOccupied = occupancy == OccupancyType.SELF_OCCUPIED
 
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -169,8 +168,13 @@ fun MaintenancePayScreen(
                         color = MaterialTheme.colorScheme.primary,
                         shape = RoundedCornerShape(12.dp)
                     ) {
+                        val occTagText = when (occupancy) {
+                            OccupancyType.SELF_OCCUPIED -> "Self-Occupied"
+                            OccupancyType.RENTED -> "Rented"
+                            OccupancyType.EMPTY_SITE -> "Empty Site"
+                        }
                         Text(
-                            text = if (isSelfOccupied) "Self-Occupied" else "Rented",
+                            text = occTagText,
                             color = MaterialTheme.colorScheme.onPrimary,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
@@ -222,11 +226,13 @@ fun MaintenancePayScreen(
                                 tint = MaterialTheme.colorScheme.secondary
                             )
                             Spacer(modifier = Modifier.width(6.dp))
+                            val rateText = when (occupancy) {
+                                OccupancyType.SELF_OCCUPIED -> "Rate: ₹${uiState.pricingRules.selfOccupiedMaintenanceRate.toInt()}/mo (Self-Occupied Rate)"
+                                OccupancyType.RENTED -> "Rate: ₹${uiState.pricingRules.rentedMaintenanceRate.toInt()}/mo (Rented Rate)"
+                                OccupancyType.EMPTY_SITE -> "Rate: ₹${uiState.pricingRules.emptySiteMaintenanceRate.toInt()}/mo (Empty Site Rate)"
+                            }
                             Text(
-                                text = if (isSelfOccupied)
-                                    "Rate: ₹${uiState.pricingRules.selfOccupiedMaintenanceRate.toInt()}/mo (Self-Occupied Rate)"
-                                else
-                                    "Rate: ₹${uiState.pricingRules.rentedMaintenanceRate.toInt()}/mo (Rented Rate)",
+                                text = rateText,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

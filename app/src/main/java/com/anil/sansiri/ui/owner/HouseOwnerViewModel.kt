@@ -9,6 +9,7 @@ import com.anil.sansiri.data.model.MaintenancePayment
 import com.anil.sansiri.data.model.OccupancyType
 import com.anil.sansiri.data.model.PaymentStatus
 import com.anil.sansiri.data.model.PricingRules
+import com.anil.sansiri.data.model.PropertyType
 import com.anil.sansiri.data.model.User
 import com.anil.sansiri.data.repository.SanSiriRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,11 +27,20 @@ data class HouseOwnerUiState(
     val approvedHouses: List<HouseDetail> = emptyList(),
     val selectedTab: Int = 0,
 
-    // House registration form fields
+    // Property / House registration form fields
+    val propertyType: PropertyType = PropertyType.INDIVIDUAL_HOUSE,
+    val siteNumber: String = "",
     val buildingName: String = "San Siri Residency",
+    val buildingNumber: String = "",
+    val floorNumber: String = "",
     val houseNumber: String = "",
+    val numberOfRentedHousesInput: String = "0",
     val crossStreet: String = "",
     val occupancyType: OccupancyType = OccupancyType.SELF_OCCUPIED,
+    val isSelfOccupied: Boolean = true,
+    val isRented: Boolean = false,
+    val numberOfRentedUnits: Int = 0,
+    val isApartment: Boolean = false,
     val isSavingHouse: Boolean = false,
     val houseSaveSuccess: String? = null,
     val houseSaveError: String? = null,
@@ -45,20 +55,46 @@ data class HouseOwnerUiState(
 ) {
     val currentCalculatedFee: Double
         get() {
-            val type = houseDetail?.occupancyType ?: occupancyType
-            return if (type == OccupancyType.SELF_OCCUPIED) {
-                pricingRules.selfOccupiedMaintenanceRate
-            } else {
-                pricingRules.rentedMaintenanceRate
+            val detail = houseDetail ?: HouseDetail(
+                propertyType = propertyType,
+                numberOfRentedHouses = numberOfRentedHousesInput.toIntOrNull() ?: 0,
+                occupancyType = occupancyType,
+                isSelfOccupied = isSelfOccupied,
+                isRented = isRented,
+                numberOfRentedUnits = numberOfRentedUnits,
+                isApartment = isApartment
+            )
+            if (detail.isApartment || detail.propertyType == PropertyType.APARTMENT) {
+                return pricingRules.selfOccupiedMaintenanceRate
             }
+            if (detail.occupancyType == OccupancyType.EMPTY_SITE || detail.propertyType == PropertyType.EMPTY_SITE) {
+                return pricingRules.emptySiteMaintenanceRate
+            }
+            var totalFee = 0.0
+            val isSelf = detail.isSelfOccupied || (detail.occupancyType == OccupancyType.SELF_OCCUPIED && !detail.isRented) || detail.propertyType == PropertyType.INDIVIDUAL_HOUSE
+            val isRent = detail.isRented || detail.occupancyType == OccupancyType.RENTED || detail.propertyType == PropertyType.HOUSE_WITH_RENTED_HOMES
+            if (isSelf) {
+                totalFee += pricingRules.selfOccupiedMaintenanceRate
+            }
+            if (isRent) {
+                val rentedCount = if (detail.numberOfRentedUnits > 0) detail.numberOfRentedUnits else maxOf(1, detail.numberOfRentedHouses)
+                totalFee += (rentedCount * pricingRules.rentedMaintenanceRate)
+            }
+            if (!isSelf && !isRent) {
+                return pricingRules.selfOccupiedMaintenanceRate
+            }
+            return totalFee
         }
 
     val registrationStatusMessage: String
-        get() = when (houseDetail?.approvalStatus) {
-            ApprovalStatus.PENDING -> "Your flat registration (${houseDetail.houseNumber}) is pending Admin approval."
-            ApprovalStatus.APPROVED -> "Flat ${houseDetail.houseNumber} registered and approved."
-            ApprovalStatus.REJECTED -> "Your flat registration (${houseDetail.houseNumber}) was rejected by Admin."
-            null -> if (houseNumber.isNotBlank()) "Your flat details ($houseNumber) are not submitted yet." else "Please register your flat details to access all residency features."
+        get() {
+            val displayNum = houseDetail?.displayHouseOrSiteNumber ?: houseNumber.ifBlank { siteNumber }
+            return when (houseDetail?.approvalStatus) {
+                ApprovalStatus.PENDING -> "Your property registration ($displayNum) is pending Admin approval."
+                ApprovalStatus.APPROVED -> "Property $displayNum verified and approved."
+                ApprovalStatus.REJECTED -> "Your property registration ($displayNum) was rejected by Admin."
+                null -> if (displayNum.isNotBlank()) "Your property details ($displayNum) are submitted." else "Please register your property details to access all features."
+            }
         }
 }
 
@@ -101,10 +137,19 @@ class HouseOwnerViewModel(private val repository: SanSiriRepository) : ViewModel
                 _uiState.update { state ->
                     state.copy(
                         houseDetail = house,
+                        propertyType = house?.propertyType ?: state.propertyType,
+                        siteNumber = house?.siteNumber ?: state.siteNumber,
                         buildingName = house?.buildingName ?: state.buildingName,
+                        buildingNumber = house?.buildingNumber ?: state.buildingNumber,
+                        floorNumber = house?.floorNumber ?: state.floorNumber,
                         houseNumber = house?.houseNumber ?: state.houseNumber,
+                        numberOfRentedHousesInput = house?.numberOfRentedHouses?.toString() ?: state.numberOfRentedHousesInput,
                         crossStreet = house?.crossStreet ?: state.crossStreet,
-                        occupancyType = house?.occupancyType ?: state.occupancyType
+                        occupancyType = house?.occupancyType ?: state.occupancyType,
+                        isSelfOccupied = house?.isSelfOccupied ?: state.isSelfOccupied,
+                        isRented = house?.isRented ?: state.isRented,
+                        numberOfRentedUnits = house?.numberOfRentedUnits ?: state.numberOfRentedUnits,
+                        isApartment = house?.isApartment ?: state.isApartment
                     )
                 }
             }
@@ -123,12 +168,32 @@ class HouseOwnerViewModel(private val repository: SanSiriRepository) : ViewModel
         _uiState.update { it.copy(selectedTab = tabIndex) }
     }
 
+    fun onPropertyTypeChanged(type: PropertyType) {
+        _uiState.update { it.copy(propertyType = type, houseSaveError = null) }
+    }
+
+    fun onSiteNumberChanged(number: String) {
+        _uiState.update { it.copy(siteNumber = number, houseSaveError = null) }
+    }
+
     fun onBuildingNameChanged(name: String) {
         _uiState.update { it.copy(buildingName = name, houseSaveError = null) }
     }
 
+    fun onBuildingNumberChanged(number: String) {
+        _uiState.update { it.copy(buildingNumber = number, houseSaveError = null) }
+    }
+
+    fun onFloorNumberChanged(number: String) {
+        _uiState.update { it.copy(floorNumber = number, houseSaveError = null) }
+    }
+
     fun onHouseNumberChanged(number: String) {
         _uiState.update { it.copy(houseNumber = number, houseSaveError = null) }
+    }
+
+    fun onRentedHousesCountChanged(count: String) {
+        _uiState.update { it.copy(numberOfRentedHousesInput = count, houseSaveError = null) }
     }
 
     fun onCrossStreetChanged(street: String) {
@@ -139,15 +204,68 @@ class HouseOwnerViewModel(private val repository: SanSiriRepository) : ViewModel
         _uiState.update { it.copy(occupancyType = type, houseSaveError = null) }
     }
 
+    fun onOccupancySelectionChanged(
+        isSelfOccupied: Boolean,
+        isRented: Boolean,
+        isApartment: Boolean,
+        isEmptySite: Boolean,
+        numberOfRentedUnits: Int,
+        occupancyType: OccupancyType
+    ) {
+        val propType = when {
+            isApartment -> PropertyType.APARTMENT
+            isEmptySite -> PropertyType.EMPTY_SITE
+            isRented -> PropertyType.HOUSE_WITH_RENTED_HOMES
+            else -> PropertyType.INDIVIDUAL_HOUSE
+        }
+        _uiState.update {
+            it.copy(
+                isSelfOccupied = isSelfOccupied,
+                isRented = isRented,
+                isApartment = isApartment,
+                numberOfRentedUnits = numberOfRentedUnits,
+                numberOfRentedHousesInput = numberOfRentedUnits.toString(),
+                occupancyType = occupancyType,
+                propertyType = propType,
+                houseSaveError = null
+            )
+        }
+    }
+
     fun saveHouseDetail() {
         val currentState = _uiState.value
-        val building = currentState.buildingName.trim()
+        val pType = currentState.propertyType
+        val siteNum = currentState.siteNumber.trim()
+        val bldgNum = currentState.buildingNumber.trim()
+        val flrNum = currentState.floorNumber.trim()
         val houseNum = currentState.houseNumber.trim()
+        val rentedCount = currentState.numberOfRentedHousesInput.toIntOrNull() ?: 0
         val street = currentState.crossStreet.trim()
 
-        if (houseNum.isBlank()) {
-            _uiState.update { it.copy(houseSaveError = "Please enter house/flat number (e.g. A-101)") }
-            return
+        // Validation based on selected PropertyType
+        when (pType) {
+            PropertyType.INDIVIDUAL_HOUSE, PropertyType.EMPTY_SITE -> {
+                if (siteNum.isBlank() && houseNum.isBlank()) {
+                    _uiState.update { it.copy(houseSaveError = "Please enter Site or House Number") }
+                    return
+                }
+            }
+            PropertyType.HOUSE_WITH_RENTED_HOMES -> {
+                if (siteNum.isBlank() && houseNum.isBlank()) {
+                    _uiState.update { it.copy(houseSaveError = "Please enter Site or House Number") }
+                    return
+                }
+                if (rentedCount <= 0) {
+                    _uiState.update { it.copy(houseSaveError = "Please enter valid number of rented houses") }
+                    return
+                }
+            }
+            PropertyType.APARTMENT -> {
+                if (houseNum.isBlank()) {
+                    _uiState.update { it.copy(houseSaveError = "Please enter House/Flat Number") }
+                    return
+                }
+            }
         }
 
         _uiState.update { it.copy(isSavingHouse = true, houseSaveError = null, houseSaveSuccess = null) }
@@ -158,14 +276,23 @@ class HouseOwnerViewModel(private val repository: SanSiriRepository) : ViewModel
             val updatedDetail = HouseDetail(
                 id = existing?.id ?: "",
                 ownerUid = user?.uid ?: "mock_owner_123",
-                ownerName = user?.name ?: "Anil Kumar",
+                ownerName = user?.name ?: "House Owner",
                 ownerPhone = user?.phoneNumber ?: "+919876543210",
-                buildingName = if (building.isBlank()) "San Siri Residency" else building,
+                propertyType = pType,
+                siteNumber = siteNum,
+                buildingName = currentState.buildingName.ifBlank { "San Siri Residency" },
+                buildingNumber = bldgNum,
+                floorNumber = flrNum,
                 houseNumber = houseNum,
+                numberOfRentedHouses = if (currentState.isRented) currentState.numberOfRentedUnits else rentedCount,
                 crossStreet = street,
                 occupancyType = currentState.occupancyType,
                 approvalStatus = existing?.approvalStatus ?: ApprovalStatus.PENDING,
-                updatedAt = System.currentTimeMillis()
+                updatedAt = System.currentTimeMillis(),
+                isSelfOccupied = currentState.isSelfOccupied,
+                isRented = currentState.isRented,
+                numberOfRentedUnits = currentState.numberOfRentedUnits,
+                isApartment = currentState.isApartment
             )
 
             val result = repository.saveHouseDetail(updatedDetail)
@@ -174,14 +301,14 @@ class HouseOwnerViewModel(private val repository: SanSiriRepository) : ViewModel
                     it.copy(
                         isSavingHouse = false,
                         houseDetail = saved,
-                        houseSaveSuccess = "House details saved successfully. Registration status: ${saved.approvalStatus.name}"
+                        houseSaveSuccess = "Property details saved successfully! Status: ${saved.approvalStatus.name}"
                     )
                 }
             }.onFailure { error ->
                 _uiState.update {
                     it.copy(
                         isSavingHouse = false,
-                        houseSaveError = error.localizedMessage ?: "Failed to save house details"
+                        houseSaveError = error.localizedMessage ?: "Failed to save property details"
                     )
                 }
             }
@@ -206,10 +333,10 @@ class HouseOwnerViewModel(private val repository: SanSiriRepository) : ViewModel
         val user = currentState.currentUser
         val amount = currentState.currentCalculatedFee
         val ref = currentState.transactionRef.trim()
-        val houseNum = house?.houseNumber ?: currentState.houseNumber
+        val houseNum = house?.displayHouseOrSiteNumber ?: currentState.houseNumber.ifBlank { currentState.siteNumber }
 
         if (houseNum.isBlank()) {
-            _uiState.update { it.copy(paymentSubmitError = "Please enter house details before submitting payment") }
+            _uiState.update { it.copy(paymentSubmitError = "Please save property details before submitting maintenance payment") }
             return
         }
 
@@ -225,7 +352,7 @@ class HouseOwnerViewModel(private val repository: SanSiriRepository) : ViewModel
                 id = "",
                 houseId = house?.id ?: "house_${System.currentTimeMillis()}",
                 ownerUid = user?.uid ?: "mock_owner_123",
-                ownerName = user?.name ?: "Anil Kumar",
+                ownerName = user?.name ?: "House Owner",
                 houseNumber = houseNum,
                 monthYear = currentState.selectedMonthYear,
                 amount = amount,
@@ -253,10 +380,6 @@ class HouseOwnerViewModel(private val repository: SanSiriRepository) : ViewModel
                 }
             }
         }
-    }
-
-    fun calculateFeeForOccupancy(type: OccupancyType): Double {
-        return repository.calculateMaintenanceFee(type, _uiState.value.pricingRules)
     }
 
     fun clearMessages() {

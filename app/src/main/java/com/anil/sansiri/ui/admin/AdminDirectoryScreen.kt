@@ -1,5 +1,15 @@
 package com.anil.sansiri.ui.admin
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.TextButton
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,7 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -37,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.anil.sansiri.data.model.HouseDetail
@@ -45,7 +55,8 @@ import com.anil.sansiri.data.model.OccupancyType
 enum class DirectoryOccupancyFilter {
     ALL,
     SELF_OCCUPIED,
-    RENTED
+    RENTED,
+    EMPTY_SITE
 }
 
 @Composable
@@ -55,6 +66,9 @@ fun AdminDirectoryScreen(
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var occupancyFilter by remember { mutableStateOf(DirectoryOccupancyFilter.ALL) }
+    var showFilterDialog by remember { mutableStateOf(false) }
+
+    val isFiltered = occupancyFilter != DirectoryOccupancyFilter.ALL
 
     val filteredHouses = remember(approvedHouses, searchQuery, occupancyFilter) {
         approvedHouses.filter { house ->
@@ -67,6 +81,7 @@ fun AdminDirectoryScreen(
                 DirectoryOccupancyFilter.ALL -> true
                 DirectoryOccupancyFilter.SELF_OCCUPIED -> house.occupancyType == OccupancyType.SELF_OCCUPIED
                 DirectoryOccupancyFilter.RENTED -> house.occupancyType == OccupancyType.RENTED
+                DirectoryOccupancyFilter.EMPTY_SITE -> house.occupancyType == OccupancyType.EMPTY_SITE
             }
 
             matchesSearch && matchesFilter
@@ -76,63 +91,84 @@ fun AdminDirectoryScreen(
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        // Search bar & Filters section
+        // Search bar & Filter Icon Button Section
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                placeholder = { Text("Search by flat, owner or street...") },
-                leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
-                singleLine = true,
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            // Filter chips
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                item {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Search by flat, owner or street...") },
+                    leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                IconButton(
+                    onClick = { showFilterDialog = true }
+                ) {
                     Icon(
                         imageVector = Icons.Default.FilterList,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                item {
-                    FilterChip(
-                        selected = occupancyFilter == DirectoryOccupancyFilter.ALL,
-                        onClick = { occupancyFilter = DirectoryOccupancyFilter.ALL },
-                        label = { Text("All (${approvedHouses.size})") }
-                    )
-                }
-
-                item {
-                    val count = approvedHouses.count { it.occupancyType == OccupancyType.SELF_OCCUPIED }
-                    FilterChip(
-                        selected = occupancyFilter == DirectoryOccupancyFilter.SELF_OCCUPIED,
-                        onClick = { occupancyFilter = DirectoryOccupancyFilter.SELF_OCCUPIED },
-                        label = { Text("Self-Occupied ($count)") }
-                    )
-                }
-
-                item {
-                    val count = approvedHouses.count { it.occupancyType == OccupancyType.RENTED }
-                    FilterChip(
-                        selected = occupancyFilter == DirectoryOccupancyFilter.RENTED,
-                        onClick = { occupancyFilter = DirectoryOccupancyFilter.RENTED },
-                        label = { Text("Rented ($count)") }
+                        contentDescription = "Filter Directory",
+                        tint = if (isFiltered) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
+
+            // Compact Active Filter Summary Chip
+            if (isFiltered) {
+                val filterLabel = when (occupancyFilter) {
+                    DirectoryOccupancyFilter.ALL -> "All"
+                    DirectoryOccupancyFilter.SELF_OCCUPIED -> "Self-Occupied"
+                    DirectoryOccupancyFilter.RENTED -> "Rented"
+                    DirectoryOccupancyFilter.EMPTY_SITE -> "Empty Site"
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FilterChip(
+                        selected = true,
+                        onClick = { showFilterDialog = true },
+                        label = { Text("Filter: $filterLabel") },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear Filter",
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .clickable {
+                                        occupancyFilter = DirectoryOccupancyFilter.ALL
+                                    }
+                            )
+                        }
+                    )
+                }
+            }
+        }
+
+        if (showFilterDialog) {
+            AdminDirectoryFilterDialog(
+                currentOccupancyFilter = occupancyFilter,
+                approvedHouses = approvedHouses,
+                onDismissRequest = { showFilterDialog = false },
+                onApply = { filter ->
+                    occupancyFilter = filter
+                },
+                onReset = {
+                    occupancyFilter = DirectoryOccupancyFilter.ALL
+                }
+            )
         }
 
         if (filteredHouses.isEmpty()) {
@@ -174,7 +210,7 @@ fun AdminDirectoryScreen(
                         text = "Approved Directory (${filteredHouses.size})",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = Color(0xFF004D40)
                     )
                 }
 
@@ -191,12 +227,11 @@ fun AdminResidentCard(
     house: HouseDetail,
     modifier: Modifier = Modifier
 ) {
-    val isSelfOccupied = house.occupancyType == OccupancyType.SELF_OCCUPIED
-
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -214,7 +249,7 @@ fun AdminResidentCard(
                     Icon(
                         imageVector = Icons.Default.HomeWork,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = Color(0xFF006A60),
                         modifier = Modifier.size(22.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -226,15 +261,26 @@ fun AdminResidentCard(
                     )
                 }
 
+                val occLabel = when (house.occupancyType) {
+                    OccupancyType.SELF_OCCUPIED -> "Self-Occupied"
+                    OccupancyType.RENTED -> "Rented"
+                    OccupancyType.EMPTY_SITE -> "Empty Site"
+                }
+                val chipColor = when (house.occupancyType) {
+                    OccupancyType.SELF_OCCUPIED -> Color(0xFFCEE8E2)
+                    OccupancyType.RENTED -> Color(0xFFBEECE6)
+                    OccupancyType.EMPTY_SITE -> Color(0xFFFEF3C7)
+                }
+
                 Surface(
-                    color = if (isSelfOccupied) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
+                    color = chipColor,
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = if (isSelfOccupied) "Self-Occupied" else "Rented",
+                        text = occLabel,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (isSelfOccupied) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+                        color = Color(0xFF08201B),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -293,3 +339,79 @@ fun AdminResidentCard(
         }
     }
 }
+
+@Composable
+fun AdminDirectoryFilterDialog(
+    currentOccupancyFilter: DirectoryOccupancyFilter,
+    approvedHouses: List<HouseDetail>,
+    onDismissRequest: () -> Unit,
+    onApply: (filter: DirectoryOccupancyFilter) -> Unit,
+    onReset: () -> Unit
+) {
+    var tempFilter by remember { mutableStateOf(currentOccupancyFilter) }
+
+    val selfCount = remember(approvedHouses) { approvedHouses.count { it.occupancyType == OccupancyType.SELF_OCCUPIED } }
+    val rentedCount = remember(approvedHouses) { approvedHouses.count { it.occupancyType == OccupancyType.RENTED } }
+    val emptyCount = remember(approvedHouses) { approvedHouses.count { it.occupancyType == OccupancyType.EMPTY_SITE } }
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        icon = { Icon(Icons.Default.FilterList, contentDescription = null) },
+        title = { Text("Filter Directory") },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text("Occupancy Type", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+
+                val options = listOf(
+                    DirectoryOccupancyFilter.ALL to "All (${approvedHouses.size})",
+                    DirectoryOccupancyFilter.SELF_OCCUPIED to "Self-Occupied ($selfCount)",
+                    DirectoryOccupancyFilter.RENTED to "Rented ($rentedCount)",
+                    DirectoryOccupancyFilter.EMPTY_SITE to "Empty Site ($emptyCount)"
+                )
+
+                options.forEach { (filterOption, label) ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { tempFilter = filterOption }
+                            .padding(vertical = 4.dp)
+                    ) {
+                        RadioButton(
+                            selected = tempFilter == filterOption,
+                            onClick = { tempFilter = filterOption }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(label)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onApply(tempFilter)
+                    onDismissRequest()
+                }
+            ) {
+                Text("Apply")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    onReset()
+                    onDismissRequest()
+                }
+            ) {
+                Text("Reset")
+            }
+        }
+    )
+}
+

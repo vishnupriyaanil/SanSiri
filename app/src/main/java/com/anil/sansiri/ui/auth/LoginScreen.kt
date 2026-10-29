@@ -12,7 +12,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -21,39 +24,50 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Apartment
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.Park
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.rotate
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -65,7 +79,6 @@ import com.anil.sansiri.data.model.User
 import com.anil.sansiri.data.model.UserRole
 import com.anil.sansiri.ui.theme.SanSiriTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel,
@@ -84,46 +97,61 @@ fun LoginScreen(
 
     LoginContent(
         uiState = uiState,
+        onNameChanged = viewModel::onNameChanged,
         onPhoneNumberChanged = viewModel::onPhoneNumberChanged,
+        onPasswordChanged = viewModel::onPasswordChanged,
+        onConfirmPasswordChanged = viewModel::onConfirmPasswordChanged,
         onOtpCodeChanged = viewModel::onOtpCodeChanged,
-        onRoleSelected = viewModel::onRoleSelected,
         onSendOtpClicked = {
             activity?.let { viewModel.sendOtp(it) }
         },
         onVerifyOtpClicked = viewModel::verifyOtp,
-        onQuickDemoLoginClicked = viewModel::quickDemoLogin,
+        onLoginClicked = viewModel::login,
+        onToggleMode = viewModel::toggleMode,
         onResetOtpState = viewModel::resetState,
         onLogout = viewModel::logout,
         modifier = modifier
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginContent(
     uiState: AuthUiState,
+    onNameChanged: (String) -> Unit,
     onPhoneNumberChanged: (String) -> Unit,
+    onPasswordChanged: (String) -> Unit,
+    onConfirmPasswordChanged: (String) -> Unit,
     onOtpCodeChanged: (String) -> Unit,
-    onRoleSelected: (UserRole) -> Unit,
     onSendOtpClicked: () -> Unit,
     onVerifyOtpClicked: () -> Unit,
-    onQuickDemoLoginClicked: (UserRole) -> Unit,
+    onLoginClicked: () -> Unit,
+    onToggleMode: () -> Unit,
     onResetOtpState: () -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+
     Scaffold(
         modifier = modifier.fillMaxSize()
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
         ) {
+            ScatteredIconsBackground()
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .imePadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
+            ) {
             Spacer(modifier = Modifier.height(24.dp))
 
             // App Branding Header
@@ -153,64 +181,19 @@ fun LoginContent(
             )
 
             Text(
-                text = "Society & Maintenance Management App",
+                text = "Society & Maintenance Management Portal",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Role Selector
-            Text(
-                text = "Select Login Role",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Start
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            SingleChoiceSegmentedButtonRow(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                SegmentedButton(
-                    selected = uiState.selectedRole == UserRole.HOUSE_OWNER,
-                    onClick = { onRoleSelected(UserRole.HOUSE_OWNER) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                ) {
-                    Text("House Owner")
-                }
-
-                SegmentedButton(
-                    selected = uiState.selectedRole == UserRole.ADMIN,
-                    onClick = { onRoleSelected(UserRole.ADMIN) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.AdminPanelSettings,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                ) {
-                    Text("Admin")
-                }
-            }
-
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Phone Login Card
+            // Elevated Login / Signup Card (8.dp elevation with 24.dp rounded corners)
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
                 colors = CardDefaults.elevatedCardColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
@@ -220,35 +203,91 @@ fun LoginContent(
                         .fillMaxWidth()
                         .padding(20.dp)
                 ) {
-                    Text(
-                        text = if (!uiState.isOtpSent) "Phone Authentication" else "Enter OTP Code",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        TextButton(
+                            onClick = { if (!uiState.isLoginMode) onToggleMode() },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                "Login",
+                                fontWeight = if (uiState.isLoginMode) FontWeight.Bold else FontWeight.Normal,
+                                color = if (uiState.isLoginMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        TextButton(
+                            onClick = { if (uiState.isLoginMode) onToggleMode() },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                "Sign Up",
+                                fontWeight = if (!uiState.isLoginMode) FontWeight.Bold else FontWeight.Normal,
+                                color = if (!uiState.isLoginMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    if (!uiState.isOtpSent) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    if (uiState.isLoginMode) {
+                        // Login Mode
                         OutlinedTextField(
                             value = uiState.phoneNumber,
-                            onValueChange = onPhoneNumberChanged,
+                            onValueChange = { newValue ->
+                                onPhoneNumberChanged(newValue.filter { it.isDigit() }.take(10))
+                            },
                             label = { Text("Phone Number") },
+                            placeholder = { Text("10-digit number") },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Phone,
                                     contentDescription = null
                                 )
                             },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                            supportingText = if (uiState.phoneNumber.isNotEmpty() && uiState.phoneNumber.length != 10) {
+                                { Text("Phone number must be exactly 10 digits", color = MaterialTheme.colorScheme.error) }
+                            } else null,
+                            isError = uiState.phoneNumber.isNotEmpty() && uiState.phoneNumber.length != 10,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp)
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        OutlinedTextField(
+                            value = uiState.password,
+                            onValueChange = onPasswordChanged,
+                            label = { Text("Password") },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = null
+                                )
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                    Icon(
+                                        imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                        contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                                    )
+                                }
+                            },
+                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
 
                         Button(
-                            onClick = onSendOtpClicked,
-                            enabled = !uiState.isLoading && uiState.phoneNumber.isNotBlank(),
+                            onClick = onLoginClicked,
+                            enabled = !uiState.isLoading && uiState.phoneNumber.length == 10 && uiState.password.isNotBlank(),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(52.dp),
@@ -266,58 +305,169 @@ fun LoginContent(
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Send Verification OTP", fontSize = 16.sp)
+                                Text("Login", fontSize = 16.sp)
                             }
                         }
                     } else {
-                        OutlinedTextField(
-                            value = uiState.otpCode,
-                            onValueChange = onOtpCodeChanged,
-                            label = { Text("OTP / Password") },
-                            supportingText = { Text("Demo OTP / Password: 123456 or 12345") },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Lock,
-                                    contentDescription = null
-                                )
-                            },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
-                        )
+                        // Signup Mode
+                        if (!uiState.isOtpSent) {
+                            OutlinedTextField(
+                                value = uiState.name,
+                                onValueChange = onNameChanged,
+                                label = { Text("Full Name") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
+                            OutlinedTextField(
+                                value = uiState.phoneNumber,
+                                onValueChange = { newValue ->
+                                    onPhoneNumberChanged(newValue.filter { it.isDigit() }.take(10))
+                                },
+                                label = { Text("Phone Number") },
+                                placeholder = { Text("10-digit number") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Phone,
+                                        contentDescription = null
+                                    )
+                                },
+                                supportingText = if (uiState.phoneNumber.isNotEmpty() && uiState.phoneNumber.length != 10) {
+                                    { Text("Phone number must be exactly 10 digits", color = MaterialTheme.colorScheme.error) }
+                                } else null,
+                                isError = uiState.phoneNumber.isNotEmpty() && uiState.phoneNumber.length != 10,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
-                        Button(
-                            onClick = onVerifyOtpClicked,
-                            enabled = !uiState.isLoading && uiState.otpCode.length >= 5,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(52.dp),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            if (uiState.isLoading) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.CheckCircle,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Verify & Login", fontSize = 16.sp)
+                            OutlinedTextField(
+                                value = uiState.password,
+                                onValueChange = onPasswordChanged,
+                                label = { Text("Password") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Lock,
+                                        contentDescription = null
+                                    )
+                                },
+                                trailingIcon = {
+                                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                        Icon(
+                                            imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                            contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                                        )
+                                    }
+                                },
+                                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            OutlinedTextField(
+                                value = uiState.confirmPassword,
+                                onValueChange = onConfirmPasswordChanged,
+                                label = { Text("Confirm Password") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Lock,
+                                        contentDescription = null
+                                    )
+                                },
+                                trailingIcon = {
+                                    IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                                        Icon(
+                                            imageVector = if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                            contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password"
+                                        )
+                                    }
+                                },
+                                visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            Button(
+                                onClick = onSendOtpClicked,
+                                enabled = !uiState.isLoading && uiState.phoneNumber.length == 10 && uiState.password.isNotBlank() && uiState.name.isNotBlank(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp),
+                                shape = RoundedCornerShape(14.dp)
+                            ) {
+                                if (uiState.isLoading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                } else {
+                                    Text("Sign Up & Verify OTP", fontSize = 16.sp)
+                                }
                             }
-                        }
+                        } else {
+                            OutlinedTextField(
+                                value = uiState.otpCode,
+                                onValueChange = onOtpCodeChanged,
+                                label = { Text("6-Digit OTP Code") },
+                                supportingText = { Text("Demo OTP Code: 123456 or Anil@102") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Lock,
+                                        contentDescription = null
+                                    )
+                                },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            )
 
-                        TextButton(
-                            onClick = onResetOtpState,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        ) {
-                            Text("Change Phone Number")
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Button(
+                                onClick = onVerifyOtpClicked,
+                                enabled = !uiState.isLoading && uiState.otpCode.length >= 5,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp),
+                                shape = RoundedCornerShape(14.dp)
+                            ) {
+                                if (uiState.isLoading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Verify & Complete Setup", fontSize = 16.sp)
+                                }
+                            }
+
+                            TextButton(
+                                onClick = onResetOtpState,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            ) {
+                                Text("Back")
+                            }
                         }
                     }
 
@@ -336,108 +486,6 @@ fun LoginContent(
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Quick Demo Access Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
-                )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Speed,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Instant Demo Login",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer
-                            )
-                        )
-                    }
-
-                    Text(
-                        text = "Skip SMS wait & test immediately with pre-configured demo roles",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = { onQuickDemoLoginClicked(UserRole.HOUSE_OWNER) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(46.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surface
-                            )
-                        ) {
-                            Text("As Owner", fontSize = 13.sp)
-                        }
-
-                        OutlinedButton(
-                            onClick = { onQuickDemoLoginClicked(UserRole.ADMIN) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(46.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surface
-                            )
-                        ) {
-                            Text("As Admin", fontSize = 13.sp)
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    OutlinedButton(
-                        onClick = { onQuickDemoLoginClicked(UserRole.SUPER_ADMIN) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(46.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AdminPanelSettings,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Super Admin Demo Login (9964532102)",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
                     }
                 }
             }
@@ -480,6 +528,66 @@ fun LoginContent(
         }
     }
 }
+}
+
+@Composable
+private fun ScatteredIconsBackground(modifier: Modifier = Modifier) {
+    val icons = remember {
+        listOf(
+            Icons.Default.Home,
+            Icons.Default.Build,
+            Icons.Default.Park,
+            Icons.Default.Security,
+            Icons.Default.AccountBalance,
+            Icons.Default.Key,
+            Icons.Default.FlashOn,
+            Icons.Default.WaterDrop,
+            Icons.Default.Apartment
+        )
+    }
+
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        val columns = 5
+        val rows = 9
+        val cellWidth = maxWidth / columns
+        val cellHeight = maxHeight / rows
+
+        for (r in 0 until rows) {
+            for (c in 0 until columns) {
+                val index = (r * columns + c) % icons.size
+                val icon = icons[index]
+                val rotation = ((r * 17 + c * 23) % 51 - 25).toFloat()
+                val alpha = 0.08f + ((r * 7 + c * 13) % 5) * 0.01f
+                val offsetX = ((r * 11 + c * 7) % 15 - 7).dp
+                val offsetY = ((r * 13 + c * 19) % 15 - 7).dp
+
+                Box(
+                    modifier = Modifier
+                        .size(cellWidth, cellHeight)
+                        .offset(
+                            x = cellWidth * c + offsetX,
+                            y = cellHeight * r + offsetY
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(34.dp)
+                            .rotate(rotation)
+                            .alpha(alpha),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
@@ -488,15 +596,19 @@ fun LoginScreenPreview() {
         Surface {
             LoginContent(
                 uiState = AuthUiState(
-                    phoneNumber = "+91 98765 43210",
-                    isOtpSent = false
+                    phoneNumber = "9876543210",
+                    isOtpSent = false,
+                    isLoginMode = true
                 ),
+                onNameChanged = {},
                 onPhoneNumberChanged = {},
+                onPasswordChanged = {},
+                onConfirmPasswordChanged = {},
                 onOtpCodeChanged = {},
-                onRoleSelected = {},
                 onSendOtpClicked = {},
                 onVerifyOtpClicked = {},
-                onQuickDemoLoginClicked = {},
+                onLoginClicked = {},
+                onToggleMode = {},
                 onResetOtpState = {},
                 onLogout = {}
             )

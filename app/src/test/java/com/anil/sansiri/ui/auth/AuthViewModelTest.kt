@@ -35,9 +35,9 @@ class AuthViewModelTest {
     }
 
     @Test
-    fun testSuperAdminLoginWithCredentials12345() = runTest {
+    fun testSuperAdminLoginWithCredentialsAnil102() = runTest {
         viewModel.onPhoneNumberChanged("9964532102")
-        viewModel.onOtpCodeChanged("12345")
+        viewModel.onOtpCodeChanged("Anil@102")
         viewModel.verifyOtp()
         testDispatcher.scheduler.advanceUntilIdle()
 
@@ -49,7 +49,7 @@ class AuthViewModelTest {
 
     @Test
     fun testSuperAdminLoginWithCredentials123456() = runTest {
-        viewModel.onPhoneNumberChanged("+919964532102")
+        viewModel.onPhoneNumberChanged("9964532102")
         viewModel.onOtpCodeChanged("123456")
         viewModel.verifyOtp()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -57,6 +57,28 @@ class AuthViewModelTest {
         val state = viewModel.uiState.value
         assertNotNull(state.currentUser)
         assertEquals(UserRole.SUPER_ADMIN, state.currentUser?.role)
+    }
+
+    @Test
+    fun testPhoneNumberFilteringDigitsAnd10DigitLimit() = runTest {
+        viewModel.onPhoneNumberChanged("+91-987-654-3210-999")
+        assertEquals("9198765432", viewModel.uiState.value.phoneNumber)
+
+        viewModel.onPhoneNumberChanged("9876543210")
+        assertEquals("9876543210", viewModel.uiState.value.phoneNumber)
+    }
+
+    @Test
+    fun testLoginFailsIfPhoneNot10Digits() = runTest {
+        viewModel.onPhoneNumberChanged("987654321") // 9 digits
+        viewModel.onPasswordChanged("Anil@102")
+        viewModel.login()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertNotNull(state.errorMessage)
+        assertEquals("Please enter a valid 10-digit phone number", state.errorMessage)
+        assertNull(state.currentUser)
     }
 
     @Test

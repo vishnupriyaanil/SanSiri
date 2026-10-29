@@ -1,5 +1,6 @@
 package com.anil.sansiri.ui.admin
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -33,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.anil.sansiri.data.model.HouseDetail
@@ -89,7 +91,7 @@ fun PendingApprovalsScreen(
                         text = "Pending House Registrations",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = Color(0xFF004D40)
                     )
                     Surface(
                         color = MaterialTheme.colorScheme.primaryContainer,
@@ -124,12 +126,11 @@ fun PendingHouseCard(
     onReject: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isSelfOccupied = house.occupancyType == OccupancyType.SELF_OCCUPIED
-
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -147,7 +148,7 @@ fun PendingHouseCard(
                     Icon(
                         imageVector = Icons.Default.HomeWork,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = Color(0xFF006A60),
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -155,25 +156,41 @@ fun PendingHouseCard(
                         text = "Flat ${house.houseNumber}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
 
+                val occLabel = when (house.occupancyType) {
+                    OccupancyType.SELF_OCCUPIED -> "Self-Occupied"
+                    OccupancyType.RENTED -> "Rented"
+                    OccupancyType.EMPTY_SITE -> "Empty Site"
+                }
+                val chipColor = when (house.occupancyType) {
+                    OccupancyType.SELF_OCCUPIED -> Color(0xFFCEE8E2)
+                    OccupancyType.RENTED -> Color(0xFFBEECE6)
+                    OccupancyType.EMPTY_SITE -> Color(0xFFFEF3C7)
+                }
+
                 Surface(
-                    color = if (isSelfOccupied) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
+                    color = chipColor,
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = if (isSelfOccupied) "Self-Occupied" else "Rented",
+                        text = occLabel,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (isSelfOccupied) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+                        color = Color(0xFF08201B),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = null,
@@ -184,12 +201,18 @@ fun PendingHouseCard(
                 Text(
                     text = if (house.ownerName.isNotBlank()) house.ownerName else "Unknown Owner",
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
             }
 
             if (house.ownerPhone.isNotBlank()) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Icon(
                         imageVector = Icons.Default.Phone,
                         contentDescription = null,
@@ -200,13 +223,19 @@ fun PendingHouseCard(
                     Text(
                         text = house.ownerPhone,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
 
             if (house.crossStreet.isNotBlank()) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = null,
@@ -217,7 +246,10 @@ fun PendingHouseCard(
                     Text(
                         text = house.crossStreet,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
@@ -245,6 +277,10 @@ fun PendingHouseCard(
 
                 Button(
                     onClick = onApprove,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF006A60),
+                        contentColor = Color.White
+                    ),
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp)
                 ) {

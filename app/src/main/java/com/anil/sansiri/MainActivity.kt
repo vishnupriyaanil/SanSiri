@@ -9,6 +9,7 @@ import com.anil.sansiri.data.repository.SanSiriRepositoryImpl
 import com.anil.sansiri.ui.MainApp
 import com.anil.sansiri.ui.admin.AdminViewModel
 import com.anil.sansiri.ui.auth.AuthViewModel
+import com.anil.sansiri.ui.home.HomeViewModel
 import com.anil.sansiri.ui.owner.HouseOwnerViewModel
 import com.anil.sansiri.ui.theme.SanSiriTheme
 
@@ -20,6 +21,10 @@ class MainActivity : ComponentActivity() {
 
     private val authViewModel: AuthViewModel by viewModels {
         AuthViewModel.Factory(repository)
+    }
+
+    private val homeViewModel: HomeViewModel by viewModels {
+        HomeViewModel.Factory(repository)
     }
 
     private val houseOwnerViewModel: HouseOwnerViewModel by viewModels {
@@ -37,6 +42,7 @@ class MainActivity : ComponentActivity() {
             SanSiriTheme {
                 MainApp(
                     authViewModel = authViewModel,
+                    homeViewModel = homeViewModel,
                     houseOwnerViewModel = houseOwnerViewModel,
                     adminViewModel = adminViewModel
                 )

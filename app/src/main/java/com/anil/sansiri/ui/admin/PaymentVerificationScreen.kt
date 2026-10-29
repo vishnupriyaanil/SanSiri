@@ -1,5 +1,6 @@
 package com.anil.sansiri.ui.admin
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.anil.sansiri.data.model.MaintenancePayment
@@ -60,8 +62,9 @@ fun PaymentVerificationScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF004D40)),
+                border = BorderStroke(1.dp, Color(0xFF00332C)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -73,7 +76,7 @@ fun PaymentVerificationScreen(
                         text = "Collections & Payment Overview",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        color = Color.White
                     )
 
                     Row(
@@ -84,7 +87,8 @@ fun PaymentVerificationScreen(
                         Card(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                            border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                         ) {
                             Column(
                                 modifier = Modifier.padding(12.dp),
@@ -94,7 +98,7 @@ fun PaymentVerificationScreen(
                                     Icon(
                                         imageVector = Icons.Default.AccountBalanceWallet,
                                         contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
+                                        tint = Color(0xFF006A60),
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
@@ -108,7 +112,7 @@ fun PaymentVerificationScreen(
                                     text = "₹${totalCollected.toInt()}",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = Color(0xFF006A60)
                                 )
                                 Text(
                                     text = "$approvedPaymentsCount approved",
@@ -124,7 +128,8 @@ fun PaymentVerificationScreen(
                         Card(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                            border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                         ) {
                             Column(
                                 modifier = Modifier.padding(12.dp),
@@ -173,7 +178,7 @@ fun PaymentVerificationScreen(
                     text = "Pending Verification",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = Color(0xFF004D40)
                 )
                 Surface(
                     color = MaterialTheme.colorScheme.secondaryContainer,
@@ -248,7 +253,8 @@ fun PendingPaymentCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -266,7 +272,7 @@ fun PendingPaymentCard(
                     Icon(
                         imageVector = Icons.Default.HomeWork,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = Color(0xFF006A60),
                         modifier = Modifier.size(22.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -282,7 +288,7 @@ fun PendingPaymentCard(
                     text = "₹${payment.amount.toInt()}",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = Color(0xFF006A60)
                 )
             }
 
@@ -375,6 +381,10 @@ fun PendingPaymentCard(
 
                 Button(
                     onClick = onApprove,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF006A60),
+                        contentColor = Color.White
+                    ),
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp)
                 ) {

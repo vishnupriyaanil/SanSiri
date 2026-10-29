@@ -1,5 +1,6 @@
 package com.anil.sansiri.ui.admin
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,10 +18,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.HomeWork
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.OtherHouses
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -31,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -40,9 +44,11 @@ import com.anil.sansiri.data.model.PricingRules
 fun PricingRulesConfigScreen(
     selfOccupiedRate: String,
     rentedRate: String,
+    emptySiteRate: String = "500",
     pricingRules: PricingRules,
     onSelfOccupiedRateChanged: (String) -> Unit,
     onRentedRateChanged: (String) -> Unit,
+    onEmptySiteRateChanged: (String) -> Unit = {},
     onSaveRules: () -> Unit,
     statusMessage: String?,
     errorMessage: String?,
@@ -61,11 +67,11 @@ fun PricingRulesConfigScreen(
             text = "Pricing Rules Configuration",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            color = Color(0xFF004D40)
         )
 
         Text(
-            text = "Set monthly maintenance fees for Self-Occupied vs Rented flats in San Siri Residency.",
+            text = "Set monthly maintenance fees for Self-Occupied, Rented flats & Empty Sites in San Siri Residency.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -74,7 +80,9 @@ fun PricingRulesConfigScreen(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -86,7 +94,7 @@ fun PricingRulesConfigScreen(
                     Icon(
                         imageVector = Icons.Default.Info,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = Color(0xFF006A60),
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -94,7 +102,7 @@ fun PricingRulesConfigScreen(
                         text = "Current Saved Pricing Rates",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = Color(0xFF006A60)
                     )
                 }
 
@@ -131,6 +139,23 @@ fun PricingRulesConfigScreen(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Empty Site:",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "₹${pricingRules.emptySiteMaintenanceRate.toInt()} / month",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
         }
 
@@ -138,7 +163,8 @@ fun PricingRulesConfigScreen(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Column(
@@ -163,7 +189,7 @@ fun PricingRulesConfigScreen(
                         Icon(
                             imageVector = Icons.Default.Home,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = Color(0xFF006A60)
                         )
                     },
                     prefix = { Text("₹ ", fontWeight = FontWeight.Bold) },
@@ -182,7 +208,26 @@ fun PricingRulesConfigScreen(
                         Icon(
                             imageVector = Icons.Default.OtherHouses,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.secondary
+                            tint = Color(0xFF4C635E)
+                        )
+                    },
+                    prefix = { Text("₹ ", fontWeight = FontWeight.Bold) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Empty Site Rate
+                OutlinedTextField(
+                    value = emptySiteRate,
+                    onValueChange = onEmptySiteRateChanged,
+                    label = { Text("Empty Site Monthly Maintenance (₹)") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.HomeWork,
+                            contentDescription = null,
+                            tint = Color(0xFF006A60)
                         )
                     },
                     prefix = { Text("₹ ", fontWeight = FontWeight.Bold) },
@@ -196,6 +241,10 @@ fun PricingRulesConfigScreen(
 
                 Button(
                     onClick = onSaveRules,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF006A60),
+                        contentColor = Color.White
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
@@ -207,7 +256,7 @@ fun PricingRulesConfigScreen(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Save Pricing Rules", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Save Pricing Rates", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
             }
         }

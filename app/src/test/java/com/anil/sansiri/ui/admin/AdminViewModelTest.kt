@@ -109,6 +109,7 @@ class AdminViewModelTest {
 
         viewModel.onSelfOccupiedRateChanged("1800")
         viewModel.onRentedRateChanged("2500")
+        viewModel.onEmptySiteRateChanged("600")
 
         viewModel.savePricingRules()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -120,6 +121,7 @@ class AdminViewModelTest {
         val updatedRules = fakeRepository.getPricingRules().first()
         assertEquals(1800.0, updatedRules.selfOccupiedMaintenanceRate, 0.01)
         assertEquals(2500.0, updatedRules.rentedMaintenanceRate, 0.01)
+        assertEquals(600.0, updatedRules.emptySiteMaintenanceRate, 0.01)
     }
 
     @Test
@@ -257,5 +259,112 @@ class AdminViewModelTest {
 
         val state = viewModel.uiState.value
         assertNotNull(state.errorMessage)
+    }
+
+    @Test
+    fun testAdminPhoneInputFilteringAndLengthLimit() = runTest {
+        viewModel.onNewAdminPhoneChanged("abc987654321099")
+        assertEquals("9876543210", viewModel.uiState.value.newAdminPhone)
+
+        viewModel.onResidentPhoneChanged("xyz998877665511")
+        assertEquals("9988776655", viewModel.uiState.value.residentPhone)
+    }
+
+    @Test
+    fun testRegisterResidentSuccess() = runTest {
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onResidentNameChanged("Test Resident")
+        viewModel.onResidentPhoneChanged("9876543211")
+        viewModel.onResidentOccupancyTypeChanged(OccupancyType.RENTED)
+        
+        viewModel.registerResident()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertNotNull(state.statusMessage)
+        assertNull(state.errorMessage)
+        assertEquals("", state.residentName)
+        assertEquals("", state.residentPhone)
+        assertEquals(OccupancyType.SELF_OCCUPIED, state.residentOccupancyType) // Resets to default
+    }
+
+    @Test
+    fun testRegisterResidentFailsWithInvalidInput() = runTest {
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onResidentNameChanged("")
+        viewModel.onResidentPhoneChanged("12345")
+        
+        viewModel.registerResident()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertNotNull(state.errorMessage)
+    }
+
+    @Test
+    fun testAddNewUserWorkflow() = runTest {
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onNewUserNameChanged("Anil User")
+        viewModel.onNewUserPhoneChanged("9112233445")
+        viewModel.onNewUserFlatNumberChanged("C-303")
+        viewModel.onNewUserCrossStreetChanged("4th Cross")
+        viewModel.onNewUserOccupancyTypeChanged(OccupancyType.RENTED)
+        viewModel.onNewUserRoleChanged(UserRole.ADMIN)
+
+        viewModel.addNewUser()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertNotNull(state.statusMessage)
+        assertNull(state.errorMessage)
+        assertEquals("", state.newUserName)
+        assertEquals("", state.newUserPhone)
+        assertEquals("", state.newUserFlatNumber)
+        assertEquals("", state.newUserCrossStreet)
+
+        val users = fakeRepository.getAllUsers().first()
+        val addedUser = users.find { it.phoneNumber == "+919112233445" }
+        assertNotNull(addedUser)
+        assertEquals("Anil User", addedUser?.name)
+        assertEquals(UserRole.ADMIN, addedUser?.role)
+
+        val houses = fakeRepository.getAllHouses().first()
+        val addedHouse = houses.find { it.ownerUid == addedUser?.uid }
+        assertNotNull(addedHouse)
+        assertEquals("C-303", addedHouse?.houseNumber)
+        assertEquals("4th Cross", addedHouse?.crossStreet)
+        assertEquals(OccupancyType.RENTED, addedHouse?.occupancyType)
+    }
+
+    @Test
+    fun testAddNewUserFailsWithInvalidPhoneOrName() = runTest {
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onNewUserNameChanged("")
+        viewModel.onNewUserPhoneChanged("123")
+        viewModel.addNewUser()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertNotNull(viewModel.uiState.value.errorMessage)
+    }
+
+    @Test
+    fun testSetUserActiveStatusInAdminViewModel() = runTest {
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.setUserActiveStatus("admin_123", false)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals("User account deactivated", state.statusMessage)
+        assertNull(state.errorMessage)
+
+        val admins = fakeRepository.getAdmins().first()
+        val deactivatedAdmin = admins.find { it.uid == "admin_123" }
+        assertNotNull(deactivatedAdmin)
+        assertEquals(false, deactivatedAdmin?.isActive)
     }
 }

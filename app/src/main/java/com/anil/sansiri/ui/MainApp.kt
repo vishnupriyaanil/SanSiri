@@ -7,17 +7,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import com.anil.sansiri.data.model.UserRole
-import com.anil.sansiri.ui.admin.AdminDashboard
 import com.anil.sansiri.ui.admin.AdminViewModel
 import com.anil.sansiri.ui.auth.AuthViewModel
 import com.anil.sansiri.ui.auth.LoginScreen
-import com.anil.sansiri.ui.owner.HouseOwnerDashboard
+import com.anil.sansiri.ui.home.HomeViewModel
+import com.anil.sansiri.ui.home.MainDashboard
 import com.anil.sansiri.ui.owner.HouseOwnerViewModel
 
 @Composable
 fun MainApp(
     authViewModel: AuthViewModel,
+    homeViewModel: HomeViewModel,
     houseOwnerViewModel: HouseOwnerViewModel,
     adminViewModel: AdminViewModel,
     modifier: Modifier = Modifier
@@ -35,22 +35,12 @@ fun MainApp(
                 onLoginSuccess = {}
             )
         } else {
-            when (currentUser.role) {
-                UserRole.ADMIN, UserRole.SUPER_ADMIN -> {
-                    AdminDashboard(
-                        viewModel = adminViewModel,
-                        onLogoutClicked = { authViewModel.logout() },
-                        onSwitchRoleClicked = { authViewModel.switchRole(UserRole.HOUSE_OWNER) }
-                    )
-                }
-                UserRole.HOUSE_OWNER -> {
-                    HouseOwnerDashboard(
-                        viewModel = houseOwnerViewModel,
-                        onLogoutClicked = { authViewModel.logout() },
-                        onSwitchRoleClicked = { authViewModel.switchRole(UserRole.ADMIN) }
-                    )
-                }
-            }
+            // MainDashboard with HomeScreen as FIRST Landing Screen for Everyone
+            MainDashboard(
+                viewModel = homeViewModel,
+                houseOwnerViewModel = houseOwnerViewModel,
+                onLogoutClicked = { authViewModel.logout() }
+            )
         }
     }
 }
