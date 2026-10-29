@@ -25,16 +25,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -45,10 +45,11 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -65,12 +66,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.anil.sansiri.data.model.HouseDetail
 import com.anil.sansiri.data.model.OccupancyType
+import com.anil.sansiri.data.model.PropertyType
 import com.anil.sansiri.data.model.User
 import com.anil.sansiri.data.model.UserRole
 import com.anil.sansiri.ui.admin.AddNewUserDialog
+import com.anil.sansiri.ui.admin.AddPropertyDialog
 import com.anil.sansiri.ui.admin.EditUserAndBuildingDetailsDialog
 
 @Composable
@@ -81,10 +83,14 @@ fun PeoplesDirectoryScreen(
     currentUser: User?,
     onAssignCrossRepresentative: (cross: String, userUid: String) -> Unit,
     modifier: Modifier = Modifier,
-    onUpdateUserRoleAndDetails: ((targetUid: String, name: String, houseNumber: String, cross: String, occupancyType: OccupancyType, role: UserRole) -> Unit)? = null
+    onUpdateUserRoleAndDetails: ((targetUid: String, name: String, houseNumber: String, cross: String, occupancyType: OccupancyType, role: UserRole) -> Unit)? = null,
+    onAddNewUser: ((name: String, phone: String, flatNumber: String, crossStreet: String, occupancyType: OccupancyType, role: UserRole) -> Unit)? = null,
+    onAddPropertyForUser: ((targetUid: String, houseNumber: String, crossStreet: String, occupancyType: OccupancyType, propertyType: PropertyType) -> Unit)? = null,
+    onToggleUserActiveStatus: ((targetUid: String, isActive: Boolean) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val isAdmin = currentUser?.isAdminOrSuperAdmin == true
+    val isSuperAdmin = currentUser?.isSuperAdmin == true
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedCrossFilter by remember { mutableStateOf("All Crosses") }
@@ -97,6 +103,7 @@ fun PeoplesDirectoryScreen(
 
     var selectedCrossForAssign by remember { mutableStateOf<String?>(null) }
     var userAndHouseToEdit by remember { mutableStateOf<Pair<User, HouseDetail?>?>(null) }
+    var selectedUserForAddProperty by remember { mutableStateOf<User?>(null) }
 
     // Build standard 1st Cross ... 10th Cross + any additional cross in houses
     val standardCrosses = remember {
@@ -118,51 +125,48 @@ fun PeoplesDirectoryScreen(
         listOf("All Crosses") + allCrosses
     }
 
-    // Function to check if a house's owner is representative of their cross
+    // Function to check if a cross has a representative and return their UID
     val getRepUid = { cross: String ->
-        val explicitRep = crossRepresentatives[cross]
-        explicitRep ?: houses.firstOrNull {
-            val c = it.crossStreet.trim().ifBlank { "1st Cross" }
-            c.equals(cross, ignoreCase = true)
-        }?.ownerUid
+        crossRepresentatives[cross]
     }
 
-    // Filter houses based on search query, selected cross filter, and representatives only
-    val filteredHouses = remember(houses, searchQuery, selectedCrossFilter, representativesOnly, crossRepresentatives, allUsers) {
-        houses.filter { house ->
-            val hCross = house.crossStreet.trim().ifBlank { "1st Cross" }
+    // Filter users based on search query, selected cross filter, and representatives only
+    val filteredUsers = remember(allUsers, houses, searchQuery, selectedCrossFilter, representativesOnly, crossRepresentatives) {
+        allUsers.filter { user ->
+            val userHouses = houses.filter { it.ownerUid == user.uid }
+            val primaryCross = userHouses.firstOrNull()?.crossStreet?.trim()?.ifBlank { "1st Cross" } ?: "1st Cross"
+            val userCrosses = if (userHouses.isEmpty()) listOf(primaryCross) else userHouses.map { it.crossStreet.trim().ifBlank { "1st Cross" } }
 
             // 1. Search Query Filter
             val matchesSearch = searchQuery.isBlank() ||
-                    house.ownerName.contains(searchQuery, ignoreCase = true) ||
-                    house.houseNumber.contains(searchQuery, ignoreCase = true) ||
-                    house.ownerPhone.contains(searchQuery, ignoreCase = true) ||
-                    hCross.contains(searchQuery, ignoreCase = true)
+                    user.name.contains(searchQuery, ignoreCase = true) ||
+                    user.phoneNumber.contains(searchQuery, ignoreCase = true) ||
+                    userHouses.any { it.houseNumber.contains(searchQuery, ignoreCase = true) } ||
+                    userCrosses.any { it.contains(searchQuery, ignoreCase = true) }
 
             // 2. Cross Filter
             val matchesCross = selectedCrossFilter == "All Crosses" ||
-                    hCross.equals(selectedCrossFilter, ignoreCase = true)
+                    userCrosses.any { it.equals(selectedCrossFilter, ignoreCase = true) }
 
             // 3. Representatives Only Filter
-            val isRep = house.ownerUid == getRepUid(hCross)
+            val isRep = userCrosses.any { c -> user.uid == getRepUid(c) }
             val matchesRep = !representativesOnly || isRep
 
             matchesSearch && matchesCross && matchesRep
         }
     }
 
-    Box(modifier = modifier.fillMaxSize()) box@ {
+    Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Header Row with Counter Badge
-            Row(
+            // Header Row with Title and Counter Badge directly below in a Column
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -185,10 +189,11 @@ fun PeoplesDirectoryScreen(
                 Surface(
                     color = Color(0xFF006A60).copy(alpha = 0.12f),
                     shape = CircleShape,
-                    border = BorderStroke(1.dp, Color(0xFF006A60).copy(alpha = 0.3f))
+                    border = BorderStroke(1.dp, Color(0xFF006A60).copy(alpha = 0.3f)),
+                    modifier = Modifier.padding(top = 4.dp)
                 ) {
                     Text(
-                        text = "Total Residents: ${filteredHouses.size}",
+                        text = "Total Residents: ${filteredUsers.size}",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF006A60),
@@ -197,260 +202,227 @@ fun PeoplesDirectoryScreen(
                 }
             }
 
-        // Search bar & Filter Icon Button with Marquee
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                placeholder = {
-                    Text(
-                        text = "Search resident by name, flat #, phone...",
-                        modifier = Modifier.basicMarquee(),
-                        maxLines = 1
-                    )
-                },
-                leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
-                singleLine = true,
-                maxLines = 1,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            IconButton(
-                onClick = { showFilterDialog = true }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.FilterList,
-                    contentDescription = "Filter Directory",
-                    tint = if (isFiltered) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        // Compact Active Filter Summary Badge / Chip
-        if (isFiltered) {
-            val activeFilterLabels = mutableListOf<String>()
-            if (selectedCrossFilter != "All Crosses") activeFilterLabels.add(selectedCrossFilter)
-            if (representativesOnly) activeFilterLabels.add("🌟 Reps Only")
-            if (!sortByCross) activeFilterLabels.add("Name (A-Z)")
-
+            // Search bar & Filter Icon Button with Marquee
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilterChip(
-                    selected = true,
-                    onClick = { showFilterDialog = true },
-                    label = { Text("Filter: " + activeFilterLabels.joinToString(" • ")) },
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Clear Filter",
-                            modifier = Modifier
-                                .size(16.dp)
-                                .clickable {
-                                    selectedCrossFilter = "All Crosses"
-                                    representativesOnly = false
-                                    sortByCross = true
-                                }
+                androidx.compose.material3.OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = {
+                        Text(
+                            text = "Search resident by name, flat #, phone...",
+                            modifier = Modifier.basicMarquee(),
+                            maxLines = 1
                         )
+                    },
+                    leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
+                    singleLine = true,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                IconButton(
+                    onClick = { showFilterDialog = true }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FilterList,
+                        contentDescription = "Filter Directory",
+                        tint = if (isFiltered) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // Compact Active Filter Summary Badge / Chip
+            if (isFiltered) {
+                val activeFilterLabels = mutableListOf<String>()
+                if (selectedCrossFilter != "All Crosses") activeFilterLabels.add(selectedCrossFilter)
+                if (representativesOnly) activeFilterLabels.add("🌟 Reps Only")
+                if (!sortByCross) activeFilterLabels.add("Name (A-Z)")
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FilterChip(
+                        selected = true,
+                        onClick = { showFilterDialog = true },
+                        label = { Text("Filter: " + activeFilterLabels.joinToString(" • ")) },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear Filter",
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .clickable {
+                                        selectedCrossFilter = "All Crosses"
+                                        representativesOnly = false
+                                        sortByCross = true
+                                    }
+                            )
+                        }
+                    )
+                }
+            }
+
+            if (showFilterDialog) {
+                PeoplesFilterDialog(
+                    currentCrossFilter = selectedCrossFilter,
+                    currentRepresentativesOnly = representativesOnly,
+                    currentSortByCross = sortByCross,
+                    filterCrossOptions = filterCrossOptions,
+                    onDismissRequest = { showFilterDialog = false },
+                    onApply = { cross, repsOnly, sortCross ->
+                        selectedCrossFilter = cross
+                        representativesOnly = repsOnly
+                        sortByCross = sortCross
+                    },
+                    onReset = {
+                        selectedCrossFilter = "All Crosses"
+                        representativesOnly = false
+                        sortByCross = true
                     }
                 )
             }
-        }
 
-        if (showFilterDialog) {
-            PeoplesFilterDialog(
-                currentCrossFilter = selectedCrossFilter,
-                currentRepresentativesOnly = representativesOnly,
-                currentSortByCross = sortByCross,
-                filterCrossOptions = filterCrossOptions,
-                onDismissRequest = { showFilterDialog = false },
-                onApply = { cross, repsOnly, sortCross ->
-                    selectedCrossFilter = cross
-                    representativesOnly = repsOnly
-                    sortByCross = sortCross
-                },
-                onReset = {
-                    selectedCrossFilter = "All Crosses"
-                    representativesOnly = false
-                    sortByCross = true
-                }
-            )
-        }
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f),
+                contentPadding = PaddingValues(bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                if (sortByCross) {
+                    // Mode 1: Grouped & Sorted by Cross
+                    val crossesToDisplay = if (selectedCrossFilter == "All Crosses") allCrosses else listOf(selectedCrossFilter)
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .weight(1f),
-            contentPadding = PaddingValues(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            if (sortByCross) {
-                // Mode 1: Grouped & Sorted by Cross
-                val crossesToDisplay = if (selectedCrossFilter == "All Crosses") allCrosses else listOf(selectedCrossFilter)
+                    crossesToDisplay.forEach { cross ->
+                        val usersInCross = filteredUsers.filter { user ->
+                            val userHouses = houses.filter { it.ownerUid == user.uid }
+                            if (userHouses.isEmpty()) {
+                                cross.equals("1st Cross", ignoreCase = true)
+                            } else {
+                                userHouses.any { it.crossStreet.trim().equals(cross, ignoreCase = true) }
+                            }
+                        }.sortedBy { it.name }
 
-                crossesToDisplay.forEach { cross ->
-                    val residentsInCross = filteredHouses.filter { house ->
-                        val hCross = house.crossStreet.trim().ifBlank { "1st Cross" }
-                        hCross.equals(cross, ignoreCase = true)
-                    }.sortedBy { it.houseNumber }
+                        val shouldShow = usersInCross.isNotEmpty()
 
-                    val repUid = getRepUid(cross)
-                    val representativeUser = repUid?.let { uid -> allUsers.find { it.uid == uid } }
-                    val isRepInFiltered = representativeUser != null && filteredHouses.any { it.ownerUid == representativeUser.uid }
-
-                    val shouldShow = residentsInCross.isNotEmpty() || isRepInFiltered
-
-                    if (shouldShow) {
-                        item(key = "header_$cross") {
-                            CrossHeader(
-                                crossName = cross,
-                                isAdmin = isAdmin,
-                                onAssignRepClicked = { selectedCrossForAssign = cross }
-                            )
-                        }
-
-                        // Representative Highlighted Section if exists & matches filters
-                        if (representativeUser != null && isRepInFiltered) {
-                            val repHouse = houses.find { it.ownerUid == representativeUser.uid }
-                            item(key = "rep_$cross") {
-                                RepresentativeHighlightCard(
+                        if (shouldShow) {
+                            item(key = "header_$cross") {
+                                CrossHeader(
                                     crossName = cross,
-                                    user = representativeUser,
-                                    houseNumber = repHouse?.displayHouseOrSiteNumber ?: "Resident",
                                     isAdmin = isAdmin,
-                                    onCall = {
-                                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${representativeUser.phoneNumber}"))
-                                        context.startActivity(intent)
-                                    },
-                                    onEdit = {
-                                        userAndHouseToEdit = Pair(representativeUser, repHouse)
-                                    }
+                                    onAssignRepClicked = { selectedCrossForAssign = cross }
                                 )
                             }
-                        }
 
-                        val nonRepResidents = residentsInCross.filter { it.ownerUid != representativeUser?.uid }
+                            items(usersInCross, key = { "res_${cross}_${it.uid}" }) { targetUser ->
+                                val userHouses = houses.filter { it.ownerUid == targetUser.uid }
+                                val pCross = userHouses.firstOrNull()?.crossStreet?.trim()?.ifBlank { cross } ?: cross
+                                val isRep = targetUser.uid == getRepUid(cross)
 
-                        if (nonRepResidents.isEmpty() && (!isRepInFiltered || representativesOnly)) {
-                            item(key = "empty_$cross") {
-                                Text(
-                                    text = if (representativesOnly) "Representative listed above." else "No other registered residents in $cross yet.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.outline,
-                                    modifier = Modifier.padding(start = 12.dp)
-                                )
-                            }
-                        } else {
-                            items(nonRepResidents, key = { "res_${it.id}" }) { house ->
-                                val targetUser = allUsers.find { usr -> usr.uid == house.ownerUid }
-                                    ?: User(uid = house.ownerUid, name = house.ownerName, phoneNumber = house.ownerPhone)
-                                ResidentDirectoryCard(
-                                    house = house,
-                                    isRepresentative = false,
+                                ResidentItemCard(
+                                    user = targetUser,
+                                    userHouses = userHouses,
+                                    isRepresentative = isRep,
+                                    primaryCross = pCross,
                                     isAdmin = isAdmin,
                                     onCall = {
-                                        if (house.ownerPhone.isNotBlank()) {
-                                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${house.ownerPhone}"))
+                                        if (targetUser.phoneNumber.isNotBlank()) {
+                                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${targetUser.phoneNumber}"))
                                             context.startActivity(intent)
                                         }
                                     },
                                     onEdit = {
-                                        userAndHouseToEdit = Pair(targetUser, house)
+                                        userAndHouseToEdit = Pair(targetUser, userHouses.firstOrNull())
+                                    },
+                                    onAddProperty = {
+                                        selectedUserForAddProperty = targetUser
+                                    },
+                                    onAssignRep = {
+                                        selectedCrossForAssign = cross
                                     }
                                 )
                             }
                         }
                     }
-                }
-            } else {
-                // Mode 2: Sorted by Name (A-Z)
-                val sortedByNameHouses = filteredHouses.sortedBy { it.ownerName.ifBlank { "Resident" }.lowercase() }
-
-                if (sortedByNameHouses.isEmpty()) {
-                    item(key = "empty_az") {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "No residents found matching your selected filter options.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
                 } else {
-                    items(sortedByNameHouses, key = { "az_${it.id}" }) { house ->
-                        val hCross = house.crossStreet.trim().ifBlank { "1st Cross" }
-                        val repUid = getRepUid(hCross)
-                        val isRep = house.ownerUid == repUid
-                        val targetUser = allUsers.find { usr -> usr.uid == house.ownerUid }
-                            ?: User(uid = house.ownerUid, name = house.ownerName, phoneNumber = house.ownerPhone)
+                    // Mode 2: Sorted by Name (A-Z)
+                    val sortedByNameUsers = filteredUsers.sortedBy { it.name.ifBlank { "Unnamed User" }.lowercase() }
 
-                        if (isRep) {
-                            RepresentativeHighlightCard(
-                                crossName = hCross,
+                    if (sortedByNameUsers.isEmpty()) {
+                        item(key = "empty_az") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No residents found matching your selected filter options.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    } else {
+                        items(sortedByNameUsers, key = { "az_${it.uid}" }) { targetUser ->
+                            val userHouses = houses.filter { it.ownerUid == targetUser.uid }
+                            val pCross = userHouses.firstOrNull()?.crossStreet?.trim()?.ifBlank { "1st Cross" } ?: "1st Cross"
+                            val isRep = getRepUid(pCross) == targetUser.uid
+
+                            ResidentItemCard(
                                 user = targetUser,
-                                houseNumber = house.displayHouseOrSiteNumber,
+                                userHouses = userHouses,
+                                isRepresentative = isRep,
+                                primaryCross = pCross,
                                 isAdmin = isAdmin,
                                 onCall = {
-                                    if (house.ownerPhone.isNotBlank()) {
-                                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${house.ownerPhone}"))
+                                    if (targetUser.phoneNumber.isNotBlank()) {
+                                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${targetUser.phoneNumber}"))
                                         context.startActivity(intent)
                                     }
                                 },
                                 onEdit = {
-                                    userAndHouseToEdit = Pair(targetUser, house)
-                                }
-                            )
-                        } else {
-                            ResidentDirectoryCard(
-                                house = house,
-                                isRepresentative = false,
-                                isAdmin = isAdmin,
-                                onCall = {
-                                    if (house.ownerPhone.isNotBlank()) {
-                                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${house.ownerPhone}"))
-                                        context.startActivity(intent)
-                                    }
+                                    userAndHouseToEdit = Pair(targetUser, userHouses.firstOrNull())
                                 },
-                                onEdit = {
-                                    userAndHouseToEdit = Pair(targetUser, house)
+                                onAddProperty = {
+                                    selectedUserForAddProperty = targetUser
+                                },
+                                onAssignRep = {
+                                    selectedCrossForAssign = pCross
                                 }
                             )
                         }
                     }
                 }
-            }
-        } // Closes LazyColumn
+            } // Closes LazyColumn
+        }
 
+        // FAB for Admin & Super Admin to Add New User
         if (isAdmin) {
             FloatingActionButton(
                 onClick = { showAddUserDialog = true },
                 shape = CircleShape,
                 containerColor = Color(0xFF006A60),
                 contentColor = Color.White,
-                modifier = this@box.run { Modifier.align(Alignment.BottomEnd) }
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
                     .padding(16.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add Resident"
+                    imageVector = Icons.Default.PersonAdd,
+                    contentDescription = "Add User"
                 )
             }
         }
-    } // Closes Box
     }
 
-    // Assign Cross Representative Dialog for Admins & Super Admins
+    // Dialogs
     if (selectedCrossForAssign != null) {
         val crossToAssign = selectedCrossForAssign!!
         AssignCrossRepDialog(
@@ -466,13 +438,12 @@ fun PeoplesDirectoryScreen(
         )
     }
 
-    // Edit User & House Details Dialog for Admins & Super Admins
     if (userAndHouseToEdit != null) {
         val (targetUser, targetHouse) = userAndHouseToEdit!!
         EditUserAndBuildingDetailsDialog(
             user = targetUser,
             house = targetHouse,
-            isSuperAdmin = currentUser?.role == UserRole.SUPER_ADMIN,
+            isSuperAdmin = isSuperAdmin,
             onSave = { name, houseNumber, cross, occupancyType, role ->
                 onUpdateUserRoleAndDetails?.invoke(
                     targetUser.uid,
@@ -490,12 +461,11 @@ fun PeoplesDirectoryScreen(
 
     if (showAddUserDialog) {
         AddNewUserDialog(
-            isSuperAdmin = currentUser?.role == UserRole.SUPER_ADMIN,
+            isSuperAdmin = isSuperAdmin,
             onAddUser = { name, phone, flatNumber, crossStreet, occupancyType, selectedRole ->
-                val targetUid = "user_dir_${System.currentTimeMillis()}"
-                onUpdateUserRoleAndDetails?.invoke(
-                    targetUid,
+                onAddNewUser?.invoke(
                     name,
+                    phone,
                     flatNumber,
                     crossStreet,
                     occupancyType,
@@ -504,6 +474,18 @@ fun PeoplesDirectoryScreen(
                 showAddUserDialog = false
             },
             onDismiss = { showAddUserDialog = false }
+        )
+    }
+
+    if (selectedUserForAddProperty != null) {
+        val targetUser = selectedUserForAddProperty!!
+        AddPropertyDialog(
+            user = targetUser,
+            onAddProperty = { houseNum, cross, occupancy, propType ->
+                onAddPropertyForUser?.invoke(targetUser.uid, houseNum, cross, occupancy, propType)
+                selectedUserForAddProperty = null
+            },
+            onDismiss = { selectedUserForAddProperty = null }
         )
     }
 }
@@ -561,217 +543,249 @@ private fun CrossHeader(
 }
 
 @Composable
-private fun RepresentativeHighlightCard(
-    crossName: String,
+private fun ResidentItemCard(
     user: User,
-    houseNumber: String,
-    isAdmin: Boolean = false,
+    userHouses: List<HouseDetail>,
+    isRepresentative: Boolean,
+    primaryCross: String,
+    isAdmin: Boolean,
     onCall: () -> Unit,
-    onEdit: (() -> Unit)? = null
+    onEdit: () -> Unit,
+    onAddProperty: () -> Unit,
+    onAssignRep: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1)),
-        border = BorderStroke(2.dp, Color(0xFFFFD54F)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // Golden Cross Representative Badge
-                    Surface(
-                        color = Color(0xFFFFD54F),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Text(text = "🌟", fontSize = 12.sp)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Cross Representative",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1C1B1F)
-                            )
-                        }
-                    }
-
-                    // Clear Cross Street Badge
-                    Surface(
-                        color = Color(0xFFE0F2F1),
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, Color(0xFF006A60).copy(alpha = 0.3f))
-                    ) {
-                        Text(
-                            text = "🚏 $crossName",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF006A60),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = user.name.ifBlank { "Resident Representative" },
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1C1B1F)
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "Flat $houseNumber • ${user.phoneNumber}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF424242)
-                )
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (isAdmin && onEdit != null) {
-                    IconButton(onClick = onEdit) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit Resident Details",
-                            tint = Color(0xFF006A60)
-                        )
-                    }
-                }
-                IconButton(onClick = onCall) {
-                    Icon(
-                        imageVector = Icons.Default.Call,
-                        contentDescription = "Call Representative",
-                        tint = Color(0xFF006A60)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ResidentDirectoryCard(
-    house: HouseDetail,
-    isRepresentative: Boolean,
-    isAdmin: Boolean = false,
-    onCall: () -> Unit,
-    onEdit: (() -> Unit)? = null
-) {
-    val displayCross = house.crossStreet.trim().ifBlank { "1st Cross" }
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
         border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "Flat ${house.displayHouseOrSiteNumber}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    // Clear Cross Street Badge
-                    Surface(
-                        color = Color(0xFFE0F2F1),
-                        shape = RoundedCornerShape(6.dp),
-                        border = BorderStroke(1.dp, Color(0xFF006A60).copy(alpha = 0.25f))
+            // Top Row: Name, Role Badge, Active Badge, Rep Badge
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "🚏 $displayCross",
-                            style = MaterialTheme.typography.labelSmall,
+                            text = user.name.ifBlank { "Resident" },
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF006A60),
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                    }
 
-                    if (isRepresentative) {
+                        // Role Badge
+                        val (roleLabel, roleBg, roleText) = when (user.role) {
+                            UserRole.SUPER_ADMIN -> Triple("SUPER ADMIN", Color(0xFFFFD54F), Color(0xFF1C1B1F))
+                            UserRole.ADMIN -> Triple("ADMIN", Color(0xFFCEE8E2), Color(0xFF08201B))
+                            UserRole.USER, UserRole.HOUSE_OWNER -> Triple("USER", Color(0xFFE8F5E9), Color(0xFF2E7D32))
+                        }
+                        Surface(color = roleBg, shape = RoundedCornerShape(6.dp)) {
+                            Text(
+                                text = roleLabel,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = roleText,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+
+                        // Active / Deactivated Badge
                         Surface(
-                            color = Color(0xFFFFD54F),
+                            color = if (user.isActive) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
                             shape = RoundedCornerShape(6.dp)
                         ) {
                             Text(
-                                text = "🌟 Rep",
+                                text = if (user.isActive) "ACTIVE" else "INACTIVE",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1C1B1F),
+                                color = if (user.isActive) Color(0xFF2E7D32) else Color(0xFFC62828),
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+
+                        if (isRepresentative) {
+                            Surface(
+                                color = Color(0xFFFFD54F),
+                                shape = RoundedCornerShape(6.dp)
+                            ) {
+                                Text(
+                                    text = "🌟 Rep",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF1C1B1F),
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Phone & Cross
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Phone,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = user.phoneNumber.ifBlank { "N/A" },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Surface(
+                            color = Color(0xFFE0F2F1),
+                            shape = RoundedCornerShape(6.dp),
+                            border = BorderStroke(1.dp, Color(0xFF006A60).copy(alpha = 0.25f))
+                        ) {
+                            Text(
+                                text = "🚏 $primaryCross",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF006A60),
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(6.dp))
+            HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
+
+            // Properties / Houses owned by user
+            if (userHouses.isEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Default.Person,
+                        imageVector = Icons.Default.Home,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = house.ownerName.ifBlank { "Resident" },
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-
-                if (house.ownerPhone.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = house.ownerPhone,
+                        text = "No property linked yet",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (isAdmin && onEdit != null) {
-                    IconButton(onClick = onEdit) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit Resident Details",
-                            tint = Color(0xFF006A60)
-                        )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "Properties (${userHouses.size}):",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF006A60)
+                    )
+                    userHouses.forEach { house ->
+                        val occLabel = when (house.occupancyType) {
+                            OccupancyType.RENTED -> "Rented"
+                            OccupancyType.EMPTY_SITE -> "Empty Site"
+                            else -> "Self-Occupied"
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Home,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = Color(0xFF006A60)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Flat ${house.displayHouseOrSiteNumber} (${house.crossStreet}) • $occLabel",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
                 }
-                if (house.ownerPhone.isNotBlank()) {
-                    IconButton(onClick = onCall) {
-                        Icon(
-                            imageVector = Icons.Default.Call,
-                            contentDescription = "Call Resident",
-                            tint = Color(0xFF006A60)
-                        )
+            }
+
+            // Action Row for Admins & Super Admins
+            if (isAdmin) {
+                Spacer(modifier = Modifier.height(4.dp))
+                HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 1.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(
+                        onClick = onAssignRep,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFF006A60)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF006A60))
+                    ) {
+                        Text("🌟 Assign Rep", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    }
+
+                    OutlinedButton(
+                        onClick = onAddProperty,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFF006A60)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF006A60))
+                    ) {
+                        Text("🏠 + Add Property", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    }
+
+                    OutlinedButton(
+                        onClick = onEdit,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFF006A60)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF006A60))
+                    ) {
+                        Icon(imageVector = Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(12.dp))
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text("Edit", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    }
+
+                    if (user.phoneNumber.isNotBlank()) {
+                        IconButton(onClick = onCall, modifier = Modifier.size(32.dp)) {
+                            Icon(imageVector = Icons.Default.Call, contentDescription = "Call", tint = Color(0xFF006A60), modifier = Modifier.size(16.dp))
+                        }
+                    }
+                }
+            } else {
+                if (user.phoneNumber.isNotBlank()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        OutlinedButton(
+                            onClick = onCall,
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(imageVector = Icons.Default.Call, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Call", style = MaterialTheme.typography.labelSmall)
+                        }
                     }
                 }
             }

@@ -82,7 +82,6 @@ import androidx.compose.material.icons.filled.PriceChange
 import com.anil.sansiri.data.model.PropertyType
 import com.anil.sansiri.data.model.UserRole
 import com.anil.sansiri.ui.admin.PricingRulesConfigScreen
-import com.anil.sansiri.ui.admin.UserManagementScreen
 import com.anil.sansiri.ui.home.tabs.AnnouncementsTab
 import com.anil.sansiri.ui.home.tabs.ConcernsTab
 import com.anil.sansiri.ui.home.tabs.RequestsTab
@@ -102,7 +101,6 @@ sealed class NavRouteItem(
     object BalanceSheet : NavRouteItem("BALANCE_SHEET", "Balance Sheet", Icons.Default.ReceiptLong)
     object Peoples : NavRouteItem("PEOPLES", "Peoples Directory", Icons.Default.Groups)
     object Contacts : NavRouteItem("CONTACTS", "Contacts", Icons.Default.ContactPhone)
-    object UserManagement : NavRouteItem("USER_MANAGEMENT", "User Management", Icons.Default.AdminPanelSettings)
     object PricingRates : NavRouteItem("PRICING_RATES", "Pricing Rates", Icons.Default.PriceChange)
 }
 
@@ -289,17 +287,6 @@ fun MainDashboard(
                     )
 
                     if (isAdmin) {
-                        NavigationDrawerItem(
-                            label = { Text("User Management") },
-                            icon = { Icon(NavRouteItem.UserManagement.icon, contentDescription = null) },
-                            selected = uiState.selectedNavRoute == NavRouteItem.UserManagement.route,
-                            onClick = {
-                                viewModel.setSelectedNavRoute(NavRouteItem.UserManagement.route)
-                                scope.launch { drawerState.close() }
-                            },
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
-                        )
-
                         NavigationDrawerItem(
                             label = { Text("Pricing Rates") },
                             icon = { Icon(NavRouteItem.PricingRates.icon, contentDescription = null) },
@@ -571,6 +558,12 @@ fun MainDashboard(
                             },
                             onUpdateUserRoleAndDetails = { targetUid, name, houseNum, cross, occupancy, role ->
                                 viewModel.updateUserRoleAndBuildingDetails(targetUid, name, houseNum, cross, occupancy, role)
+                            },
+                            onAddNewUser = { name, phone, flat, cross, occupancy, role ->
+                                viewModel.adminRegisterUser(name, phone, flat, cross, occupancy, role)
+                            },
+                            onAddPropertyForUser = { targetUid, houseNum, cross, occupancy, propType ->
+                                viewModel.addPropertyForUser(targetUid, houseNum, cross, occupancy, propType)
                             }
                         )
 
@@ -585,21 +578,6 @@ fun MainDashboard(
                             },
                             onDeleteContact = { contactId ->
                                 viewModel.deleteSocietyContact(contactId)
-                            }
-                        )
-
-                        NavRouteItem.UserManagement.route -> UserManagementScreen(
-                            currentUser = user,
-                            allUsers = uiState.allUsers,
-                            allHouses = uiState.approvedHouses,
-                            onUpdateUserRoleAndDetails = { targetUid, name, houseNum, cross, occupancy, role ->
-                                viewModel.updateUserRoleAndBuildingDetails(targetUid, name, houseNum, cross, occupancy, role)
-                            },
-                            onAddNewUser = { name, phone, flat, cross, occupancy, role ->
-                                viewModel.adminRegisterUser(name, phone, flat, cross, occupancy, role)
-                            },
-                            onToggleUserActiveStatus = { targetUid, isActive ->
-                                viewModel.toggleUserActiveStatus(targetUid, isActive)
                             }
                         )
 

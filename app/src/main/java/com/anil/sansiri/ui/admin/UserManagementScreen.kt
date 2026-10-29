@@ -1,10 +1,10 @@
 package com.anil.sansiri.ui.admin
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,33 +27,19 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
-import android.widget.Toast
-import com.anil.sansiri.ui.common.CrossStreetDropdown
-import com.anil.sansiri.ui.common.OccupancySelectionSection
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -65,16 +51,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.anil.sansiri.data.model.HouseDetail
 import com.anil.sansiri.data.model.OccupancyType
-import com.anil.sansiri.data.model.PricingRules
 import com.anil.sansiri.data.model.PropertyType
 import com.anil.sansiri.data.model.User
 import com.anil.sansiri.data.model.UserRole
+import com.anil.sansiri.ui.common.CrossStreetDropdown
+import com.anil.sansiri.ui.common.OccupancySelectionSection
+import com.anil.sansiri.ui.home.PeoplesDirectoryScreen
 
+/**
+ * @deprecated User Management has been merged into PeoplesDirectoryScreen.
+ * This file contains shared admin dialogs (`AddNewUserDialog`, `AddPropertyDialog`, `EditUserAndBuildingDetailsDialog`)
+ * and a deprecated wrapper.
+ */
+@Deprecated("User Management has been merged into PeoplesDirectoryScreen")
 @Composable
 fun UserManagementScreen(
     currentUser: User?,
@@ -93,341 +90,18 @@ fun UserManagementScreen(
     onToggleUserActiveStatus: ((targetUid: String, isActive: Boolean) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    val isSuperAdmin = currentUser?.isSuperAdmin == true
-
-    var selectedUserForEdit by remember { mutableStateOf<User?>(null) }
-    var selectedUserForAddProperty by remember { mutableStateOf<User?>(null) }
-    var showAddUserDialog by remember { mutableStateOf(false) }
-
-    Box(modifier = modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-            ) {
-                Text(
-                    text = "User Directory & Account Management",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF004D40),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Manage user profiles, flat details & role permissions",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(allUsers, key = { it.uid }) { user ->
-                    val userHouses = allHouses.filter { it.ownerUid == user.uid }
-                    UserItemCard(
-                        user = user,
-                        userHouses = userHouses,
-                        onEditClicked = { selectedUserForEdit = user },
-                        onAddPropertyClicked = { selectedUserForAddProperty = user },
-                        onToggleActiveStatus = { isActive ->
-                            onToggleUserActiveStatus?.invoke(user.uid, isActive)
-                        }
-                    )
-                }
-            }
-        }
-
-        FloatingActionButton(
-            onClick = { showAddUserDialog = true },
-            shape = CircleShape,
-            containerColor = Color(0xFF006A60),
-            contentColor = Color.White,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add User"
-            )
-        }
-    }
-
-    if (showAddUserDialog) {
-        AddNewUserDialog(
-            isSuperAdmin = isSuperAdmin,
-            onAddUser = { name, phone, flat, cross, occupancy, role ->
-                onAddNewUser?.invoke(name, phone, flat, cross, occupancy, role)
-                showAddUserDialog = false
-            },
-            onDismiss = { showAddUserDialog = false }
-        )
-    }
-
-    if (selectedUserForAddProperty != null) {
-        val targetUser = selectedUserForAddProperty!!
-        AddPropertyDialog(
-            user = targetUser,
-            onAddProperty = { houseNum, cross, occupancy, propType ->
-                onAddPropertyForUser?.invoke(targetUser.uid, houseNum, cross, occupancy, propType)
-                selectedUserForAddProperty = null
-            },
-            onDismiss = { selectedUserForAddProperty = null }
-        )
-    }
-
-    if (selectedUserForEdit != null) {
-        val editingUser = selectedUserForEdit!!
-        val editingHouse = allHouses.find { it.ownerUid == editingUser.uid }
-
-        EditUserAndBuildingDetailsDialog(
-            user = editingUser,
-            house = editingHouse,
-            isSuperAdmin = isSuperAdmin,
-            onSave = { name, houseNum, cross, occupancy, role ->
-                onUpdateUserRoleAndDetails(editingUser.uid, name, houseNum, cross, occupancy, role)
-                selectedUserForEdit = null
-            },
-            onDismiss = { selectedUserForEdit = null }
-        )
-    }
-}
-
-@Composable
-private fun UserItemCard(
-    user: User,
-    userHouses: List<HouseDetail>,
-    onEditClicked: () -> Unit,
-    onAddPropertyClicked: () -> Unit,
-    onToggleActiveStatus: (Boolean) -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
-        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = user.name.ifBlank { "Resident" },
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    val (roleLabel, roleBg, roleText) = when (user.role) {
-                        UserRole.SUPER_ADMIN -> Triple("SUPER ADMIN", Color(0xFFFFD54F), Color(0xFF1C1B1F))
-                        UserRole.ADMIN -> Triple("ADMIN", Color(0xFFCEE8E2), Color(0xFF08201B))
-                        UserRole.USER, UserRole.HOUSE_OWNER -> Triple("USER", Color(0xFFE8F5E9), Color(0xFF2E7D32))
-                    }
-                    Surface(color = roleBg, shape = RoundedCornerShape(6.dp)) {
-                        Text(
-                            text = roleLabel,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = roleText,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(6.dp))
-
-                    Surface(
-                        color = if (user.isActive) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
-                        shape = RoundedCornerShape(6.dp)
-                    ) {
-                        Text(
-                            text = if (user.isActive) "ACTIVE" else "DEACTIVATED",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = if (user.isActive) Color(0xFF2E7D32) else Color(0xFFC62828),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Phone,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = user.phoneNumber, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // List all houses owned by user
-                if (userHouses.isEmpty()) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "No property linked",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                } else {
-                    userHouses.forEach { house ->
-                        val occLabel = when (house.occupancyType) {
-                            OccupancyType.RENTED -> "Rented"
-                            OccupancyType.EMPTY_SITE -> "Empty Site"
-                            else -> "Self-Occupied"
-                        }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(vertical = 1.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Home,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = Color(0xFF006A60)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Flat ${house.displayHouseOrSiteNumber} ($occLabel)",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // Temporary Password Display with Key Icon and Copy Button
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Key,
-                        contentDescription = "Temporary Password",
-                        modifier = Modifier.size(14.dp),
-                        tint = Color(0xFFD84315)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Temp Pass: ",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "Anil@102",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFD84315)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    val clipboardManager = LocalClipboardManager.current
-                    val context = LocalContext.current
-                    Surface(
-                        onClick = {
-                            clipboardManager.setText(AnnotatedString("Anil@102"))
-                            Toast.makeText(context, "Password copied: Anil@102", Toast.LENGTH_SHORT).show()
-                        },
-                        shape = RoundedCornerShape(4.dp),
-                        color = Color(0xFFFBE9E7)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ContentCopy,
-                                contentDescription = "Copy Password",
-                                modifier = Modifier.size(12.dp),
-                                tint = Color(0xFFD84315)
-                            )
-                            Spacer(modifier = Modifier.width(2.dp))
-                            Text(
-                                text = "Copy",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFFD84315)
-                            )
-                        }
-                    }
-                }
-            }
-
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                IconButton(onClick = onEditClicked) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit User",
-                        tint = Color(0xFF006A60)
-                    )
-                }
-
-                OutlinedButton(
-                    onClick = onAddPropertyClicked,
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, Color(0xFF006A60)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF006A60))
-                ) {
-                    Text(
-                        text = "+ Add Property",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                OutlinedButton(
-                    onClick = { onToggleActiveStatus(!user.isActive) },
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(
-                        1.dp,
-                        if (user.isActive) Color(0xFFC62828) else Color(0xFF2E7D32)
-                    ),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (user.isActive) Color(0xFFC62828) else Color(0xFF2E7D32)
-                    )
-                ) {
-                    Text(
-                        text = if (user.isActive) "Deactivate" else "Activate",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-    }
+    PeoplesDirectoryScreen(
+        houses = allHouses,
+        allUsers = allUsers,
+        crossRepresentatives = emptyMap(),
+        currentUser = currentUser,
+        onAssignCrossRepresentative = { _, _ -> },
+        modifier = modifier,
+        onUpdateUserRoleAndDetails = onUpdateUserRoleAndDetails,
+        onAddNewUser = onAddNewUser,
+        onAddPropertyForUser = onAddPropertyForUser,
+        onToggleUserActiveStatus = onToggleUserActiveStatus
+    )
 }
 
 @Composable
@@ -667,7 +341,6 @@ fun AddNewUserDialog(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditUserAndBuildingDetailsDialog(
     user: User,
