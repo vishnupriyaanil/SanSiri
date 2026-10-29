@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
@@ -147,6 +148,7 @@ fun UserManagementScreen(
 
         FloatingActionButton(
             onClick = { showAddUserDialog = true },
+            shape = androidx.compose.foundation.shape.CircleShape,
             containerColor = Color(0xFF006A60),
             contentColor = Color.White,
             modifier = Modifier
@@ -154,7 +156,7 @@ fun UserManagementScreen(
                 .padding(16.dp)
         ) {
             Icon(
-                imageVector = Icons.Default.PersonAdd,
+                imageVector = Icons.Default.Add,
                 contentDescription = "Add User"
             )
         }
@@ -666,7 +668,7 @@ fun AddNewUserDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EditUserAndBuildingDetailsDialog(
+fun EditUserAndBuildingDetailsDialog(
     user: User,
     house: HouseDetail?,
     isSuperAdmin: Boolean,

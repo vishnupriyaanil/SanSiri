@@ -2,13 +2,10 @@ package com.anil.sansiri.ui.home
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Switch
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,10 +21,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.LocationOn
@@ -48,6 +48,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -63,7 +64,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.anil.sansiri.data.model.HouseDetail
+import com.anil.sansiri.data.model.OccupancyType
 import com.anil.sansiri.data.model.User
+import com.anil.sansiri.data.model.UserRole
+import com.anil.sansiri.ui.admin.EditUserAndBuildingDetailsDialog
 
 @Composable
 fun PeoplesDirectoryScreen(
@@ -72,7 +76,8 @@ fun PeoplesDirectoryScreen(
     crossRepresentatives: Map<String, String>, // crossName -> userUid
     currentUser: User?,
     onAssignCrossRepresentative: (cross: String, userUid: String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onUpdateUserRoleAndDetails: ((targetUid: String, name: String, houseNumber: String, cross: String, occupancyType: OccupancyType, role: UserRole) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val isAdmin = currentUser?.isAdminOrSuperAdmin == true
@@ -86,6 +91,7 @@ fun PeoplesDirectoryScreen(
     val isFiltered = selectedCrossFilter != "All Crosses" || representativesOnly || !sortByCross
 
     var selectedCrossForAssign by remember { mutableStateOf<String?>(null) }
+    var userAndHouseToEdit by remember { mutableStateOf<Pair<User, HouseDetail?>?>(null) }
 
     // Build standard 1st Cross ... 10th Cross + any additional cross in houses
     val standardCrosses = remember {
@@ -146,7 +152,7 @@ fun PeoplesDirectoryScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Header
+        // Header Row with Counter Badge
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -183,7 +189,7 @@ fun PeoplesDirectoryScreen(
             }
         }
 
-        // Search bar & Filter Icon Button
+        // Search bar & Filter Icon Button with Marquee
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -192,9 +198,16 @@ fun PeoplesDirectoryScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Search resident by name, flat #, phone...") },
+                placeholder = {
+                    Text(
+                        text = "Search resident by name, flat #, phone...",
+                        modifier = Modifier.basicMarquee(),
+                        maxLines = 1
+                    )
+                },
                 leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
                 singleLine = true,
+                maxLines = 1,
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(12.dp)
             )
@@ -302,9 +315,13 @@ fun PeoplesDirectoryScreen(
                                     crossName = cross,
                                     user = representativeUser,
                                     houseNumber = repHouse?.displayHouseOrSiteNumber ?: "Resident",
+                                    isAdmin = isAdmin,
                                     onCall = {
                                         val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${representativeUser.phoneNumber}"))
                                         context.startActivity(intent)
+                                    },
+                                    onEdit = {
+                                        userAndHouseToEdit = Pair(representativeUser, repHouse)
                                     }
                                 )
                             }
@@ -323,14 +340,20 @@ fun PeoplesDirectoryScreen(
                             }
                         } else {
                             items(nonRepResidents, key = { "res_${it.id}" }) { house ->
+                                val targetUser = allUsers.find { usr -> usr.uid == house.ownerUid }
+                                    ?: User(uid = house.ownerUid, name = house.ownerName, phoneNumber = house.ownerPhone)
                                 ResidentDirectoryCard(
                                     house = house,
                                     isRepresentative = false,
+                                    isAdmin = isAdmin,
                                     onCall = {
                                         if (house.ownerPhone.isNotBlank()) {
                                             val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${house.ownerPhone}"))
                                             context.startActivity(intent)
                                         }
+                                    },
+                                    onEdit = {
+                                        userAndHouseToEdit = Pair(targetUser, house)
                                     }
                                 )
                             }
@@ -361,29 +384,38 @@ fun PeoplesDirectoryScreen(
                         val hCross = house.crossStreet.trim().ifBlank { "1st Cross" }
                         val repUid = getRepUid(hCross)
                         val isRep = house.ownerUid == repUid
+                        val targetUser = allUsers.find { usr -> usr.uid == house.ownerUid }
+                            ?: User(uid = house.ownerUid, name = house.ownerName, phoneNumber = house.ownerPhone)
 
                         if (isRep) {
-                            val repUser = allUsers.find { it.uid == house.ownerUid }
                             RepresentativeHighlightCard(
                                 crossName = hCross,
-                                user = repUser ?: User(uid = house.ownerUid, name = house.ownerName, phoneNumber = house.ownerPhone),
+                                user = targetUser,
                                 houseNumber = house.displayHouseOrSiteNumber,
+                                isAdmin = isAdmin,
                                 onCall = {
                                     if (house.ownerPhone.isNotBlank()) {
                                         val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${house.ownerPhone}"))
                                         context.startActivity(intent)
                                     }
+                                },
+                                onEdit = {
+                                    userAndHouseToEdit = Pair(targetUser, house)
                                 }
                             )
                         } else {
                             ResidentDirectoryCard(
                                 house = house,
                                 isRepresentative = false,
+                                isAdmin = isAdmin,
                                 onCall = {
                                     if (house.ownerPhone.isNotBlank()) {
                                         val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${house.ownerPhone}"))
                                         context.startActivity(intent)
                                     }
+                                },
+                                onEdit = {
+                                    userAndHouseToEdit = Pair(targetUser, house)
                                 }
                             )
                         }
@@ -406,6 +438,28 @@ fun PeoplesDirectoryScreen(
                 selectedCrossForAssign = null
             },
             onDismiss = { selectedCrossForAssign = null }
+        )
+    }
+
+    // Edit User & House Details Dialog for Admins & Super Admins
+    if (userAndHouseToEdit != null) {
+        val (targetUser, targetHouse) = userAndHouseToEdit!!
+        EditUserAndBuildingDetailsDialog(
+            user = targetUser,
+            house = targetHouse,
+            isSuperAdmin = currentUser?.role == UserRole.SUPER_ADMIN,
+            onSave = { name, houseNumber, cross, occupancyType, role ->
+                onUpdateUserRoleAndDetails?.invoke(
+                    targetUser.uid,
+                    name,
+                    houseNumber,
+                    cross,
+                    occupancyType,
+                    role
+                )
+                userAndHouseToEdit = null
+            },
+            onDismiss = { userAndHouseToEdit = null }
         )
     }
 }
@@ -467,14 +521,16 @@ private fun RepresentativeHighlightCard(
     crossName: String,
     user: User,
     houseNumber: String,
-    onCall: () -> Unit
+    isAdmin: Boolean = false,
+    onCall: () -> Unit,
+    onEdit: (() -> Unit)? = null
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1)),
         border = BorderStroke(2.dp, Color(0xFFFFD54F)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -484,22 +540,42 @@ private fun RepresentativeHighlightCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                // Golden Cross Representative Badge
-                Surface(
-                    color = Color(0xFFFFD54F),
-                    shape = RoundedCornerShape(8.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    // Golden Cross Representative Badge
+                    Surface(
+                        color = Color(0xFFFFD54F),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text(text = "🌟", fontSize = 12.sp)
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(text = "🌟", fontSize = 12.sp)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Cross Representative",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1C1B1F)
+                            )
+                        }
+                    }
+
+                    // Clear Cross Street Badge
+                    Surface(
+                        color = Color(0xFFE0F2F1),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFF006A60).copy(alpha = 0.3f))
+                    ) {
                         Text(
-                            text = "Cross Representative ($crossName)",
+                            text = "🚏 $crossName",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1C1B1F)
+                            color = Color(0xFF006A60),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
                 }
@@ -519,22 +595,23 @@ private fun RepresentativeHighlightCard(
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
-            // Phone Call Button launching phone dialer
-            Button(
-                onClick = onCall,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF006A60),
-                    contentColor = Color.White
-                ),
-                shape = CircleShape,
-                contentPadding = PaddingValues(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Call,
-                    contentDescription = "Call Representative",
-                    modifier = Modifier.size(20.dp)
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (isAdmin && onEdit != null) {
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit Resident Details",
+                            tint = Color(0xFF006A60)
+                        )
+                    }
+                }
+                IconButton(onClick = onCall) {
+                    Icon(
+                        imageVector = Icons.Default.Call,
+                        contentDescription = "Call Representative",
+                        tint = Color(0xFF006A60)
+                    )
+                }
             }
         }
     }
@@ -544,19 +621,19 @@ private fun RepresentativeHighlightCard(
 private fun ResidentDirectoryCard(
     house: HouseDetail,
     isRepresentative: Boolean,
-    onCall: () -> Unit
+    isAdmin: Boolean = false,
+    onCall: () -> Unit,
+    onEdit: (() -> Unit)? = null
 ) {
     val displayCross = house.crossStreet.trim().ifBlank { "1st Cross" }
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isRepresentative) Color(0xFFFFFDE7) else MaterialTheme.colorScheme.surface
+            containerColor = Color.White
         ),
-        border = BorderStroke(
-            1.dp,
-            if (isRepresentative) Color(0xFFFFE082) else Color(0xFFE2E8F0)
-        )
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -566,16 +643,33 @@ private fun ResidentDirectoryCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Text(
-                        text = "Flat ${house.displayHouseOrSiteNumber} • $displayCross",
+                        text = "Flat ${house.displayHouseOrSiteNumber}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
+                    // Clear Cross Street Badge
+                    Surface(
+                        color = Color(0xFFE0F2F1),
+                        shape = RoundedCornerShape(6.dp),
+                        border = BorderStroke(1.dp, Color(0xFF006A60).copy(alpha = 0.25f))
+                    ) {
+                        Text(
+                            text = "🚏 $displayCross",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF006A60),
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+
                     if (isRepresentative) {
-                        Spacer(modifier = Modifier.width(8.dp))
                         Surface(
                             color = Color(0xFFFFD54F),
                             shape = RoundedCornerShape(6.dp)
@@ -591,7 +685,7 @@ private fun ResidentDirectoryCard(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Person,
@@ -617,13 +711,24 @@ private fun ResidentDirectoryCard(
                 }
             }
 
-            if (house.ownerPhone.isNotBlank()) {
-                IconButton(onClick = onCall) {
-                    Icon(
-                        imageVector = Icons.Default.Call,
-                        contentDescription = "Call Resident",
-                        tint = Color(0xFF006A60)
-                    )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (isAdmin && onEdit != null) {
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit Resident Details",
+                            tint = Color(0xFF006A60)
+                        )
+                    }
+                }
+                if (house.ownerPhone.isNotBlank()) {
+                    IconButton(onClick = onCall) {
+                        Icon(
+                            imageVector = Icons.Default.Call,
+                            contentDescription = "Call Resident",
+                            tint = Color(0xFF006A60)
+                        )
+                    }
                 }
             }
         }
@@ -850,4 +955,3 @@ fun PeoplesFilterDialog(
         }
     )
 }
-

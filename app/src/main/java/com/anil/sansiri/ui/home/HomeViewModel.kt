@@ -289,18 +289,26 @@ class HomeViewModel(private val repository: SanSiriRepository) : ViewModel() {
     }
 
     fun markNotificationAsRead(notificationId: String) {
+        val updatedList = _uiState.value.notifications.map {
+            if (it.id == notificationId) it.copy(isRead = true) else it
+        }
+        val unreadCount = updatedList.count { !it.isRead }
+        _uiState.update { it.copy(notifications = updatedList, unreadNotificationCount = unreadCount) }
         viewModelScope.launch {
             repository.markNotificationAsRead(notificationId)
         }
     }
 
     fun markAllNotificationsAsRead() {
+        val updatedList = _uiState.value.notifications.map { it.copy(isRead = true) }
+        _uiState.update { it.copy(notifications = updatedList, unreadNotificationCount = 0) }
         viewModelScope.launch {
             repository.markAllNotificationsAsRead()
         }
     }
 
     fun clearNotifications() {
+        _uiState.update { it.copy(notifications = emptyList(), unreadNotificationCount = 0) }
         viewModelScope.launch {
             repository.clearNotifications()
         }

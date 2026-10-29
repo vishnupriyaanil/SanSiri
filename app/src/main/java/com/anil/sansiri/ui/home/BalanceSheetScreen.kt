@@ -47,6 +47,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -343,17 +344,17 @@ fun BalanceSheetScreen(
 
         // Admin FAB: + Add Entry at bottom right in Deep Teal (#006A60)
         if (isAdmin) {
-            ExtendedFloatingActionButton(
+            FloatingActionButton(
                 onClick = { showAddTransactionDialog = true },
                 containerColor = Color(0xFF006A60),
                 contentColor = Color.White,
-                shape = RoundedCornerShape(16.dp),
-                icon = { Icon(Icons.Default.Add, contentDescription = "Add Entry") },
-                text = { Text("Add Entry", fontWeight = FontWeight.Bold) },
+                shape = CircleShape,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(16.dp)
-            )
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Entry")
+            }
         }
     }
 

@@ -24,12 +24,12 @@ private val LightColorScheme = lightColorScheme(
     onTertiary = SlateOnTertiary,
     tertiaryContainer = SlateTertiaryContainer,
     onTertiaryContainer = SlateOnTertiaryContainer,
-    background = SurfaceLight,
+    background = Color(0xFFF1F5F9), // Slate background #F1F5F9
     onBackground = OnSurfaceLight,
-    surface = SurfaceLight,
+    surface = Color(0xFFFFFFFF),     // Crisp white surface #FFFFFF
     onSurface = OnSurfaceLight,
-    surfaceContainer = SurfaceContainerLight,
-    surfaceVariant = SoftCardSurfaceLight
+    surfaceContainer = Color(0xFFE2E8F0),
+    surfaceVariant = Color(0xFFF8FAFC)
 )
 
 private val DarkColorScheme = darkColorScheme(

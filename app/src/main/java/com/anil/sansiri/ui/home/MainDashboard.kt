@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.ContactPhone
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.HomeWork
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
@@ -92,6 +93,7 @@ sealed class NavRouteItem(
     val title: String,
     val icon: ImageVector
 ) {
+    object Home : NavRouteItem("HOME", "Home", Icons.Default.Home)
     object Announcements : NavRouteItem("ANNOUNCEMENTS", "Announcements", Icons.Default.Campaign)
     object Requests : NavRouteItem("REQUESTS", "Requests", Icons.AutoMirrored.Filled.Assignment)
     object Payments : NavRouteItem("PAYMENTS", "Payments", Icons.Default.Payments)
@@ -219,55 +221,19 @@ fun MainDashboard(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     // Left Navigation Drawer Links
+                    val isHomeSelected = uiState.selectedNavRoute in listOf(
+                        NavRouteItem.Home.route,
+                        NavRouteItem.Announcements.route,
+                        NavRouteItem.Requests.route,
+                        NavRouteItem.Payments.route,
+                        NavRouteItem.Concerns.route
+                    )
                     NavigationDrawerItem(
-                        label = { Text("Announcements") },
-                        icon = { Icon(NavRouteItem.Announcements.icon, contentDescription = null) },
-                        selected = uiState.selectedNavRoute == NavRouteItem.Announcements.route,
+                        label = { Text("Home") },
+                        icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                        selected = isHomeSelected,
                         onClick = {
                             viewModel.setSelectedNavRoute(NavRouteItem.Announcements.route)
-                            scope.launch { drawerState.close() }
-                        },
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
-                    )
-
-                    NavigationDrawerItem(
-                        label = { Text("Requests") },
-                        icon = { Icon(NavRouteItem.Requests.icon, contentDescription = null) },
-                        selected = uiState.selectedNavRoute == NavRouteItem.Requests.route,
-                        onClick = {
-                            viewModel.setSelectedNavRoute(NavRouteItem.Requests.route)
-                            scope.launch { drawerState.close() }
-                        },
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
-                    )
-
-                    NavigationDrawerItem(
-                        label = { Text("Payments") },
-                        icon = {
-                            if (unpaidMonthsCount > 0) {
-                                BadgedBox(
-                                    badge = { Badge { Text(unpaidMonthsCount.toString()) } }
-                                ) {
-                                    Icon(NavRouteItem.Payments.icon, contentDescription = null)
-                                }
-                            } else {
-                                Icon(NavRouteItem.Payments.icon, contentDescription = null)
-                            }
-                        },
-                        selected = uiState.selectedNavRoute == NavRouteItem.Payments.route,
-                        onClick = {
-                            viewModel.setSelectedNavRoute(NavRouteItem.Payments.route)
-                            scope.launch { drawerState.close() }
-                        },
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
-                    )
-
-                    NavigationDrawerItem(
-                        label = { Text("Concerns") },
-                        icon = { Icon(NavRouteItem.Concerns.icon, contentDescription = null) },
-                        selected = uiState.selectedNavRoute == NavRouteItem.Concerns.route,
-                        onClick = {
-                            viewModel.setSelectedNavRoute(NavRouteItem.Concerns.route)
                             scope.launch { drawerState.close() }
                         },
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
@@ -451,53 +417,66 @@ fun MainDashboard(
                 )
             },
             bottomBar = {
-                // 4 Main Navigation Tabs Bottom Bar
-                NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-                    // 1st Tab: Announcements
-                    NavigationBarItem(
-                        selected = uiState.selectedNavRoute == NavRouteItem.Announcements.route,
-                        onClick = { viewModel.setSelectedNavRoute(NavRouteItem.Announcements.route) },
-                        icon = { Icon(imageVector = NavRouteItem.Announcements.icon, contentDescription = NavRouteItem.Announcements.title) },
-                        label = null,
-                        alwaysShowLabel = false
-                    )
+                val isMainHomeRoute = uiState.selectedNavRoute in listOf(
+                    NavRouteItem.Home.route,
+                    NavRouteItem.Announcements.route,
+                    NavRouteItem.Requests.route,
+                    NavRouteItem.Payments.route,
+                    NavRouteItem.Concerns.route,
+                    "HOME"
+                )
+                if (isMainHomeRoute) {
+                    // 4 Main Navigation Tabs Bottom Bar (Compact 64.dp height)
+                    NavigationBar(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        modifier = Modifier.height(64.dp)
+                    ) {
+                        // 1st Tab: Announcements
+                        NavigationBarItem(
+                            selected = uiState.selectedNavRoute == NavRouteItem.Announcements.route || uiState.selectedNavRoute == NavRouteItem.Home.route || uiState.selectedNavRoute == "HOME",
+                            onClick = { viewModel.setSelectedNavRoute(NavRouteItem.Announcements.route) },
+                            icon = { Icon(imageVector = NavRouteItem.Announcements.icon, contentDescription = NavRouteItem.Announcements.title) },
+                            label = null,
+                            alwaysShowLabel = false
+                        )
 
-                    // 2nd Tab: Requests
-                    NavigationBarItem(
-                        selected = uiState.selectedNavRoute == NavRouteItem.Requests.route,
-                        onClick = { viewModel.setSelectedNavRoute(NavRouteItem.Requests.route) },
-                        icon = { Icon(imageVector = NavRouteItem.Requests.icon, contentDescription = NavRouteItem.Requests.title) },
-                        label = null,
-                        alwaysShowLabel = false
-                    )
+                        // 2nd Tab: Requests
+                        NavigationBarItem(
+                            selected = uiState.selectedNavRoute == NavRouteItem.Requests.route,
+                            onClick = { viewModel.setSelectedNavRoute(NavRouteItem.Requests.route) },
+                            icon = { Icon(imageVector = NavRouteItem.Requests.icon, contentDescription = NavRouteItem.Requests.title) },
+                            label = null,
+                            alwaysShowLabel = false
+                        )
 
-                    // 3rd Tab: Payments
-                    NavigationBarItem(
-                        selected = uiState.selectedNavRoute == NavRouteItem.Payments.route,
-                        onClick = { viewModel.setSelectedNavRoute(NavRouteItem.Payments.route) },
-                        icon = {
-                            if (unpaidMonthsCount > 0) {
-                                BadgedBox(
-                                    badge = { Badge { Text(unpaidMonthsCount.toString()) } }
-                                ) {
+                        // 3rd Tab: Payments
+                        NavigationBarItem(
+                            selected = uiState.selectedNavRoute == NavRouteItem.Payments.route,
+                            onClick = { viewModel.setSelectedNavRoute(NavRouteItem.Payments.route) },
+                            icon = {
+                                if (unpaidMonthsCount > 0) {
+                                    BadgedBox(
+                                        badge = { Badge { Text(unpaidMonthsCount.toString()) } }
+                                    ) {
+                                        Icon(imageVector = NavRouteItem.Payments.icon, contentDescription = NavRouteItem.Payments.title)
+                                    }
+                                } else {
                                     Icon(imageVector = NavRouteItem.Payments.icon, contentDescription = NavRouteItem.Payments.title)
                                 }
-                            } else {
-                                Icon(imageVector = NavRouteItem.Payments.icon, contentDescription = NavRouteItem.Payments.title)
-                            }
-                        },
-                        label = null,
-                        alwaysShowLabel = false
-                    )
+                            },
+                            label = null,
+                            alwaysShowLabel = false
+                        )
 
-                    // 4th Tab: Concerns
-                    NavigationBarItem(
-                        selected = uiState.selectedNavRoute == NavRouteItem.Concerns.route,
-                        onClick = { viewModel.setSelectedNavRoute(NavRouteItem.Concerns.route) },
-                        icon = { Icon(imageVector = NavRouteItem.Concerns.icon, contentDescription = NavRouteItem.Concerns.title) },
-                        label = null,
-                        alwaysShowLabel = false
-                    )
+                        // 4th Tab: Concerns
+                        NavigationBarItem(
+                            selected = uiState.selectedNavRoute == NavRouteItem.Concerns.route,
+                            onClick = { viewModel.setSelectedNavRoute(NavRouteItem.Concerns.route) },
+                            icon = { Icon(imageVector = NavRouteItem.Concerns.icon, contentDescription = NavRouteItem.Concerns.title) },
+                            label = null,
+                            alwaysShowLabel = false
+                        )
+                    }
                 }
             }
         ) { innerPadding ->
@@ -515,7 +494,7 @@ fun MainDashboard(
                     label = "TabSwitchAnimation"
                 ) { targetRoute ->
                     when (targetRoute) {
-                        NavRouteItem.Announcements.route -> AnnouncementsTab(
+                        NavRouteItem.Home.route, "HOME", NavRouteItem.Announcements.route -> AnnouncementsTab(
                             announcements = uiState.announcements,
                             currentUser = user,
                             onPostAnnouncementClicked = { viewModel.setShowCreateAnnouncementDialog(true) },
@@ -568,6 +547,9 @@ fun MainDashboard(
                             currentUser = user,
                             onAssignCrossRepresentative = { cross, userUid ->
                                 viewModel.assignCrossRepresentative(cross, userUid)
+                            },
+                            onUpdateUserRoleAndDetails = { targetUid, name, houseNum, cross, occupancy, role ->
+                                viewModel.updateUserRoleAndBuildingDetails(targetUid, name, houseNum, cross, occupancy, role)
                             }
                         )
 
